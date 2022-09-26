@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "uptane"
+version = "0.0.1"
+description = "autosec uptane demo library"
+authors = ["AlfredDaimari <alfreddaimari77@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+securesystemslib = "^0.24.0"
+tuf = "^2.0.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
