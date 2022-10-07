@@ -2,6 +2,7 @@
 
 from datetime import date
 
+
 class Role:
     '''
         Automatic Role Common Functions Class
@@ -16,20 +17,19 @@ class Role:
     def __init__(self) -> None:
         pass
 
-
     def revoke_key(self, key_id) -> None:
         pass
 
-    def get_time_to_expr(self, key_id:str) -> date:
+    def get_time_to_expr(self, key_id: str) -> date:
         pass
 
-    def generate_signature(self, key_id:str) -> None:
+    def generate_signature(self, key_id: str) -> None:
         pass
 
-    def replace_online_key(self, new_key:str, key_id_to_replace:str) -> None:
+    def replace_online_key(self, new_key: str, key_id_to_replace: str) -> None:
         pass
-    
-    def add_online_key(self, new_key:str) -> None:
+
+    def add_online_key(self, new_key: str) -> None:
         pass
 
     def sign_metadata(self, metadata_file) -> None:

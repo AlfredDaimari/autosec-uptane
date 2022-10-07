@@ -4,28 +4,8 @@
 #   - will generate root_metadata.toml file (using toml files to make it human readable)
 #
 
+
 class Root:
 
     def __init__(self) -> None:
         pass
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -2,6 +2,7 @@
 
 from uptane.roles.role import Role
 
+
 class Targets(Role):
     '''
     Targets role
@@ -12,8 +13,5 @@ class Targets(Role):
     def __init__(self) -> None:
         Role.__init__(self)
 
-
     def sign_image_metadata(self, image_metadata_file) -> None:
         self.sign_metadata(image_metadata_file)
-
-

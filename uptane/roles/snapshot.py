@@ -2,8 +2,8 @@
 
 from uptane.roles.role import Role
 
-class Snapshot(Role):
 
+class Snapshot(Role):
     '''
         Class inheriting the Snapshot role of Uptane
 
@@ -14,4 +14,3 @@ class Snapshot(Role):
 
     def sign_targets_metadata(self, metadata_file) -> None:
         self.sign_metadata(metadata_file)
-

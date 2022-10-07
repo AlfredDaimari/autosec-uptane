@@ -4,7 +4,6 @@ from uptane.roles.role import Role
 
 
 class Timestamp(Role):
-
     '''
     Timestamp class
 
@@ -17,5 +16,3 @@ class Timestamp(Role):
 
     def sign_snapshot_metadata(self, snapshot_metadata_file) -> None:
         self.sign_metadata(snapshot_metadata_file)
-
-
