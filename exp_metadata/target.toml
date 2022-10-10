@@ -1,0 +1,21 @@
+[signatures]
+keyid = "publickey"
+sig = "signature of signed portion"
+
+[signed]
+_type = "targets"
+spec_version = "0.0.1"
+expires = ""
+image_name = "name of image"
+image_url = "url location of file"
+image_size = "size of file"
+image_hash = "hash of image"
+image_hash_func = "function used to hash the image"
+image_buf_size = "buffer size used to hash the image"
+image_version = "image version"
+
+[signed.imetadata]
+# this metadata is vendor dependent
+
+
+

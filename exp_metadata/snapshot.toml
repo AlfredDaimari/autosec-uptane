@@ -1,0 +1,14 @@
+[signatures]
+keyid = "publickey"
+sig = "signature of signed portion"
+
+[signed]
+_type = "snapshot"
+spec_version = "0.0.1"
+version = "0.0.1"
+expires = ""
+image_name = "name of image"
+image_url = "image url image"
+image_size = "size of image"
+image_hash = "hash of image"
+image_version = "version of image"

@@ -1,0 +1,16 @@
+[signatures]
+keyid = "publickey"
+sig = "signature of signed portion"
+
+[signed]
+_type = "timestamp"
+spec_version = "0.0.1"
+version = "0.0.1"
+expires = ""
+image_name = "name of image"
+latest_image_url = "url of latest image"
+latest_image_size = "size of image"
+latest_image_hash = "hash of image"
+latest_image_version = "version of latest image"
+latest_image_metadata_url = "url of latest image metadata" #snapshot metadata 
+
