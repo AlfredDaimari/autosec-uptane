@@ -1,13 +1,12 @@
 # file for implementing targets role
 
+import pathlib
 from uptane.roles.role import AutoRole, ManualRole
 from typing import Dict, Any
-import cryptography
-import hashlib
 import os
 import toml
-from uptane.crypto.hash import HashFunc
-
+import uptane.crypto.hash
+import uptane.crypto.sign
 
 ONLINE_TARGETS_SPEC_VERSION = "0.0.1"
 OFFLINE_TARGETS_SPEC_VERSION = "0.0.1"
@@ -37,44 +36,37 @@ class TargetsOffline(ManualRole):
 
     def __init__(self, role_cfg, metadata_cfg) -> None:
         ManualRole.__init__(self, role_cfg)
-        self.metadata_cfg_dict = {}
+        self.metadata_cfg_dict:Dict[str, Any] = {}
+
+        metadata_cfg_pth = pathlib.Path(metadata_cfg)
+        if not pathlib.Path.exists(metadata_cfg_pth):
+            raise FileNotFoundError
+        else:
+            metadata_cfg_f = open(metadata_cfg, "r")
+
+            try:
+                self.metadata_cfg_dict = toml.load(metadata_cfg_f)
+
+            except toml.TomlDecodeError:
+                print( "CFG error: The metadata config file consists of errors")
+                exit(1)
+
+            except:
+                print("Unknown error generated at TargetsOffline.__init__(self,..,..)")
+                exit(1)
+
         self.new_metadata_signed_dict:Dict[str, Any] = {
             "spec_version": OFFLINE_TARGETS_SPEC_VERSION,
             "_type": "targets",
             "imetadata":{}
         }
+        self.new_metadata_signature_dict:Dict[str, str] = {
+            "signature": "",
+            "public_key": self.public_key,
+        }
 
     def __get_file_size(self) -> int:
-        return os.path.getsize(self.metadata_cfg_dict["local_file_path"])
-
-    def __get_file_hash(self, hashf: HashFunc, bufsize:int) -> str:
-        '''
-        Hash the file, path to file is given in metadata_cfg
-            Parameters:
-                hashf (HashFunc): the hash function to be used
-            Retures:
-                str: the hash of the file 
-        '''
-        hashfunc = hashlib.sha256() # using sha256 as default
-
-        if hashf == HashFunc.sha256:
-            hashfunc = hashlib.sha256() 
-
-        if hashf == HashFunc.md5:
-            hashfunc = hashlib.md5()
-            
-        # ? add more hash functions ??
-
-        image_file = open(self.metadata_cfg_dict["local_file_path"], "rb")
-
-        while True:
-            data = image_file.read(bufsize)
-            if not data:
-                break
-            hashfunc.update(data)
-
-        return hashfunc.hexdigest()
-
+        return os.path.getsize(self.metadata_cfg_dict["limage_path"]) 
         
     def __generate_metadata(self) -> None:
         '''
@@ -90,8 +82,12 @@ class TargetsOffline(ManualRole):
 
         bufsize = 65536 # make this a commandline input
         self.new_metadata_signed_dict["image_buf_size"] = f'{bufsize}'
+
+        # TODO add a correct hash function option
+        self.new_metadata_signed_dict["hash_function"] = "sha256"
         self.new_metadata_signed_dict["image_hash"] = \
-        self.__get_file_hash(HashFunc.sha256, bufsize)
+        uptane.crypto.hash.get_file_hash(self.metadata_cfg_dict["limage_path"], \
+                                         uptane.crypto.hash.HashFunc.sha256, bufsize)
 
         for metakey in meta_to_newmeta_map:
             self.new_metadata_signed_dict[meta_to_newmeta_map[metakey]] = \
@@ -103,9 +99,18 @@ class TargetsOffline(ManualRole):
                 self.new_metadata_signed_dict["imetadata"][key] = \
                 self.metadata_cfg_dict[key]
 
+        # TODO add support for more key types
+        # adding signature for metadata after all metadata has been generated
+        self.new_metadata_signed_dict["signature_algo"] = "ed25519"
+        self.new_metadata_signature_dict["signature"] = \
+        uptane.crypto.sign.sign_metadata(self.new_metadata_signed_dict, \
+        uptane.crypto.hash.HashFunc.sha256, uptane.crypto.sign.KeyType.ed25519, \
+        self.private_key)
+
     def generate_metadata_file(self, metadata_file: str) -> None:
         self.__generate_metadata()
         toml_file = open(metadata_file, "w")
-        toml.dump(self.new_metadata_signed_dict, toml_file)
+        toml.dump({"signature": self.new_metadata_signature_dict, \
+        "signed": self.new_metadata_signed_dict}, toml_file)
 
 

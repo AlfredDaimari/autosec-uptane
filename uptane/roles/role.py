@@ -1,7 +1,7 @@
 # This file will contain all the common code for all the automatic roles
 
 from datetime import date
-import typings
+import typing
 import pathlib
 import toml
 
@@ -34,7 +34,7 @@ class AutoRole:
         else:
             try:
                 toml_dict = toml.load(f=cfg, _dict=dict)
-                self.online_key = toml_dict["private_key"]
+                self.online_key = toml_dict["key"]
                 self.role = toml_dict["role"]
                 # TODO - comeup with cfg file structure
 
@@ -87,21 +87,26 @@ class ManualRole:
 
     def __init__(self, cfg) -> None:
         cfg_pth = pathlib.Path(cfg)
-
         if not pathlib.Path.exists(cfg_pth):
             raise FileNotFoundError
+        
         else:
+            cfg_f = open(cfg, "r")
+
             try:
-                toml_dict = toml.load(f=cfg, _dict=dict)
+                toml_dict = toml.load(cfg_f)
                 self.private_key = toml_dict["private_key"]
                 self.role = toml_dict["role"]
+                self.public_key = toml_dict["public_key"]
                 # TODO - comeup with cfg file structure
 
             except toml.TomlDecodeError:
                 print(
                     "CFG error: The toml config file consists of syntax errors")
+                exit(1)
             except:
-                print("Unknow error generated at AutoRole.__init__(self, cfg)")
+                print("Unknown error generated at AutoRole.__init__(self, cfg)")
+                exit(1)
 
     def generate_metadata_file(self, metadata_file: str) -> None:
         pass
