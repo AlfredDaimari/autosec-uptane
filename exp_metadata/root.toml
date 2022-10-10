@@ -1,0 +1,67 @@
+[signed]
+_type = "root"
+spec_version = "0.0.1"
+version = "0.0.1"
+expires = "" # UTC time, python equivalent is time.time()
+
+[[signed.keys]]
+keytype = "ed25519"
+scheme = "ed25519"
+keyval = "public key value"
+
+
+[[signed.roles.snapshot.keys]]
+keytype = "ed25519"
+scheme = "ed25519"
+keyval = "public key value"
+
+[[signed.roles.snapshot.keys]]
+keytype = "ed25519"
+scheme = "ed25519"
+keyval = "public key value"
+
+[[signed.roles.snapshot.keys]]
+keytype = "ed25519"
+scheme = "ed25519"
+keyval = "public key value"
+
+signed.roles.snaphshot.threshold = 2 
+
+[[signed.roles.timestamp.keys]]
+keytype = "ed25519"
+scheme = "ed25519"
+keyval = "public key value"
+
+[[signed.roles.timestamp.keys]]
+keytype = "ed25519"
+scheme = "ed25519"
+keyval = "public key value"
+
+[[signed.roles.timestamp.keys]]
+keytype = "ed25519"
+scheme = "ed25519"
+keyval = "public key value"
+
+signed.roles.timestamp.threshold = 2
+
+[[signed.roles.target.keys]]
+keytype = "ed25519"
+scheme = "ed25519"
+keyval = "public key value"
+
+[[signed.roles.target.keys]]
+keytype = "ed25519"
+scheme = "ed25519"
+keyval = "public key value"
+
+[[signed.roles.target.keys]]
+keytype = "ed25519"
+scheme = "ed25519"
+keyval = "public key value"
+
+signed.roles.target.threshold = 2
+
+[signatures]
+keyid = "publickey"
+sig = "signature of entire file signed"
+

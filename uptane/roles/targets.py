@@ -1,17 +1,19 @@
 # file for implementing targets role
 
-from uptane.roles.role import Role
+from uptane.roles.role import AutoRole
 
 
-class Targets(Role):
+class Targets(AutoRole):
     '''
-    Targets role
-
-        this role signs the image metadata
+    Targets roles 
+    This role will sign the image metadata
     '''
 
-    def __init__(self) -> None:
-        Role.__init__(self)
+    def __init__(self, cfg: str) -> None:
+        AutoRole.__init__(self, cfg)
 
     def sign_image_metadata(self, image_metadata_file) -> None:
+        '''
+        Sign image metadata
+        '''
         self.sign_metadata(image_metadata_file)
