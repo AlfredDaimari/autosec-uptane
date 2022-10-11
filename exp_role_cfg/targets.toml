@@ -1,0 +1,13 @@
+# configuration file for role
+role = "targets"
+private_key = "private key in pem format"
+public_key = "public key in pem format"
+
+# hash configuration
+[hash]
+buffsize = 65536    # default is 8kb 
+function = "hash function to be used"
+
+[signature]
+algorithm = "eddsa"   
+
