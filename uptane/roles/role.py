@@ -1,9 +1,12 @@
 # This file will contain all the common code for all the automatic roles
 
 from datetime import date
+import os
 import typing
-import pathlib
-import toml
+import tomli
+import tomli_w
+import uptane.crypto.hash
+import uptane.crypto.sign
 
 
 class AutoRole:
@@ -24,25 +27,16 @@ class AutoRole:
             
             Parameters:
                 cfg (str): path to the configuration file
-
+            
+            Raises:
+                tomli.TomlDecodeError
+                FileNotFoundError
         '''
-
-        cfg_pth = pathlib.Path(cfg)
-
-        if not pathlib.Path.exists(cfg_pth):
-            raise FileNotFoundError
-        else:
-            try:
-                toml_dict = toml.load(f=cfg, _dict=dict)
-                self.online_key = toml_dict["key"]
-                self.role = toml_dict["role"]
-                # TODO - comeup with cfg file structure
-
-            except toml.TomlDecodeError:
-                print(
-                    "CFG error: The toml config file consists of syntax errors")
-            except:
-                print("Unknow error generated at AutoRole.__init__(self, cfg)")
+        with open(cfg, "rb") as f:
+            toml_dict = tomli.load(f)
+            self.online_key = toml_dict["key"]
+            self.role = toml_dict["role"]
+            # TODO - comeup with cfg file structure
 
     def get_expr_time(self,
                       metadata_file: str) -> None:  # return type should be date
@@ -81,35 +75,111 @@ class ManualRole:
             - Implements common functionality between human roles (Snapshot, Timestamp,
                 Targets)
 
-            - Common functions are - sign_metadata, generate_signature,
+            - Common functions are - gen_cfg_metadata, gen_signed_metadata_file
+
+            - This class is only meant to be used for a terminal program, not run on server
 
     '''
 
     def __init__(self, cfg) -> None:
-        cfg_pth = pathlib.Path(cfg)
-        if not pathlib.Path.exists(cfg_pth):
-            raise FileNotFoundError
+        '''
+        Init Manual Role, configures the role
+
+            Parameters:
+                cfg (str): path to the role configuration toml file
+
+            Raises:
+                FileNotFoundError - when toml file is not found 
+                tomli.TomlDecodeError - when toml has syntax error
+
+            TODO:
+                Come up with our own toml parsing library
+        '''
+
+        with open(cfg, "rb") as f:
+
+            toml_dict = tomli.load(f)
+            self.private_key = toml_dict["private_key"]
+            self.role = toml_dict["role"]
+            self.public_key = toml_dict["public_key"]
+            self.key_type = toml_dict["key_type"]
+
+            self.hash_function = toml_dict["hash"]["function"]
+            self.bufsize = toml_dict["hash"]["bufsize"]
+
+            self.sig_algo = toml_dict["signature"]["algorithm"]
+
+            self.signed_dict: typing.Dict[str, typing.Any] = {}
+            self.signature_dict: typing.Dict[str, typing.Any] = {}
+
+            self.__gen_cfg_metadata()
+
+    def __gen_cfg_metadata(self) -> None:
+        '''
+        Generates the cfg metadata for the image metadata file
+        '''
+        self.signature_dict["keyid"] = self.public_key
+        self.signature_dict["sig"] = ""
+        self.signature_dict["key_type"] = self.key_type
+        self.signed_dict["image_hash_func"] = self.hash_function
+        self.signed_dict["image_buf_size"] = self.bufsize
+        self.signed_dict["image_sig_algo"] = self.sig_algo
+
+    def gen_signed_metadata_file(self, metadata_file: str) -> None:
+        '''
+        Generates the signed toml metadata file using self.signed_dict, self.signature_dict
+        Generates the signature using self.signed_dict and populates self.signature_dict
         
-        else:
-            cfg_f = open(cfg, "r")
+            Paramters:
+                meta_file (str): name of the file to push to, creates new one if it does
+                not exist
 
-            try:
-                toml_dict = toml.load(cfg_f)
-                self.private_key = toml_dict["private_key"]
-                self.role = toml_dict["role"]
-                self.public_key = toml_dict["public_key"]
-                # TODO - comeup with cfg file structure
+            Raises:
+                tomli.TomlDecodeError - when toml has syntax error
+        '''
+        self.signature_dict["sig"] = uptane.crypto.sign.sign_metadata(self.signed_dict, \
+        uptane.crypto.hash.HashFunc.sha256, uptane.crypto.sign.KeyType.ed25519, \
+        self.private_key)
 
-            except toml.TomlDecodeError:
-                print(
-                    "CFG error: The toml config file consists of syntax errors")
-                exit(1)
-            except:
-                print("Unknown error generated at AutoRole.__init__(self, cfg)")
-                exit(1)
+        with open(metadata_file, "wb") as f:
+            tomli_w.dump(
+                {
+                    "signature": self.signature_dict,
+                    "signed": self.signed_dict
+                }, f)
 
-    def generate_metadata_file(self, metadata_file: str) -> None:
-        pass
 
-    def sign_metadata(self, metadata_file: str) -> None:
-        pass
+class TarSnapManualRole(ManualRole):
+    '''
+    Implements the common functionality between both such as:
+        - generate image file hashes
+        - generate metadata file signature
+    '''
+
+    def __init__(self, cfg, image_cfg: str) -> None:
+        '''
+        Inits the common metadata between Targets and Snapshot
+        Common Metadata:
+            - image_name
+            - image_url
+            - image_version
+            - image_size 
+            - image_hash 
+        '''
+        ManualRole.__init__(self, cfg)
+        self.image_cfg_toml_dict: typing.Dict[str, typing.Any] = {}
+
+        with open(image_cfg, "rb") as f:
+            toml_dict = tomli.load(f)
+            self.local_image_path: str = toml_dict['local_path']
+            self.signed_dict["image_name"] = toml_dict["_name"]
+            self.signed_dict["image_url"] = toml_dict["_url"]
+            self.signed_dict["image_version"] = toml_dict["_version"]
+            self.signed_dict["image_size"] = self.__get_file_size()
+            self.signed_dict["image_hash"] = \
+            uptane.crypto.hash.get_file_hash(self.local_image_path, \
+            uptane.crypto.hash.HashFunc.sha256, self.bufsize)
+            self.image_cfg_toml_dict = toml_dict  # for latter use
+
+    def __get_file_size(self) -> int:
+        return os.path.getsize(self.local_image_path)
