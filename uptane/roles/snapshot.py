@@ -54,8 +54,7 @@ class SnapshotOffline(TarSnapManualRole):
 
             self.targets_metadata_file_dict = tomli.load(f)
 
-            self.signed_dict["spec_version"] = str(
-                OFFLINE_SNAPSHOT_SPEC_VERSION)
+            self.signed_dict["spec_version"] = OFFLINE_SNAPSHOT_SPEC_VERSION
             self.signed_dict["_type"] = "snapshot"
 
             self.__generate_metadata()

@@ -82,7 +82,7 @@ class ManualRole:
 
     '''
 
-    def __init__(self, cfg) -> None:
+    def __init__(self, cfg: str) -> None:
         '''
         Init Manual Role, configures the role
 
