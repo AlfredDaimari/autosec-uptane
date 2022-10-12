@@ -1,12 +1,13 @@
-# This file will contain all the common code for all the automatic roles
+# common code between various roles
 
-from datetime import date
 import os
 import typing
+import time
 import tomli
 import tomli_w
 import uptane.crypto.hash
 import uptane.crypto.sign
+import uptane.time
 
 
 class AutoRole:
@@ -137,6 +138,7 @@ class ManualRole:
             Raises:
                 tomli.TomlDecodeError - when toml has syntax error
         '''
+        self.signed_dict["expires"] = f'{uptane.time.get_fut24_epoch_time()}'
         self.signature_dict["sig"] = uptane.crypto.sign.sign_metadata(self.signed_dict, \
         uptane.crypto.hash.HashFunc.sha256, uptane.crypto.sign.KeyType.ed25519, \
         self.private_key)

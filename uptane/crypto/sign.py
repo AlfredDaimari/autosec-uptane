@@ -12,12 +12,14 @@ from Crypto.PublicKey import ECC
 class KeyType(Enum):
     ed25519 = 1
 
+
 def __sort_metadata(metadata: Dict[str, Any]) -> Dict[str, Any]:
     sorted_metadata = dict(sorted(metadata.items()))
     for key in sorted_metadata:
         if type(sorted_metadata[key]) == type(dict):
             sorted_metadata[key] = __sort_metadata(sorted_metadata[key])
     return sorted_metadata
+
 
 def sign_metadata(metadata: Dict[str, Any], hashf: HashFunc, ktype: KeyType,
                   key: str) -> str:

@@ -49,4 +49,5 @@ class TargetsOffline(TarSnapManualRole):
 
         for key in self.image_cfg_toml_dict:
             if not key in reserved_metadata_keys:
-                self.signed_dict["imetadata"][key] = self.image_cfg_toml_dict[key]
+                self.signed_dict["imetadata"][key] = self.image_cfg_toml_dict[
+                    key]
