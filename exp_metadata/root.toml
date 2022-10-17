@@ -8,57 +8,57 @@ threshold = 1
 [[signed.keys]]
 keytype = "ed25519"
 scheme = "ed25519"
-keyval = "public key value"
+keyid = "public key value"
 
 
 [[signed.roles.snapshot.keys]]
 keytype = "ed25519"
 scheme = "ed25519"
-keyval = "public key value"
+keyid = "public key value"
 
 [[signed.roles.snapshot.keys]]
 keytype = "ed25519"
 scheme = "ed25519"
-keyval = "public key value"
+keyid = "public key value"
 
 [[signed.roles.snapshot.keys]]
 keytype = "ed25519"
 scheme = "ed25519"
-keyval = "public key value"
+keyid = "public key value"
 
 signed.roles.snaphshot.threshold = 2 
 
 [[signed.roles.timestamp.keys]]
 keytype = "ed25519"
 scheme = "ed25519"
-keyval = "public key value"
+keyid = "public key value"
 
 [[signed.roles.timestamp.keys]]
 keytype = "ed25519"
 scheme = "ed25519"
-keyval = "public key value"
+keyid = "public key value"
 
 [[signed.roles.timestamp.keys]]
 keytype = "ed25519"
 scheme = "ed25519"
-keyval = "public key value"
+keyid = "public key value"
 
 signed.roles.timestamp.threshold = 2
 
 [[signed.roles.target.keys]]
 keytype = "ed25519"
 scheme = "ed25519"
-keyval = "public key value"
+keyid = "public key value"
 
 [[signed.roles.target.keys]]
 keytype = "ed25519"
 scheme = "ed25519"
-keyval = "public key value"
+keyid = "public key value"
 
 [[signed.roles.target.keys]]
 keytype = "ed25519"
 scheme = "ed25519"
-keyval = "public key value"
+keyid = "public key value"
 
 signed.roles.target.threshold = 2
 

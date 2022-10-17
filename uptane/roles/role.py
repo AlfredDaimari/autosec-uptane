@@ -8,6 +8,9 @@ import tomli_w
 import uptane.crypto.hash
 import uptane.crypto.sign
 import uptane.time
+import uptane.error.general
+
+URL = 'http://www.autosec.com/'
 
 
 class AutoRole:
@@ -185,3 +188,217 @@ class TarSnapManualRole(ManualRole):
 
     def __get_file_size(self) -> int:
         return os.path.getsize(self.local_image_path)
+
+
+class Verification:
+    '''
+    This is the verification class of uptane, for verification, you would need access to 
+    unexpired root metadata file:
+    The various verification it performs are:
+        Target Verification:
+            Checks hash of File 
+            Checks signature of File 
+
+        Snapshot Verification 
+            Checks hash of image file 
+            Checks signature of file 
+            Checks hash of Targets metadata file against Snapshot hash 
+
+        Timestamp Verification 
+            Checks signature of file 
+            Checks hash of Snapshot metadata file against hash in Timestamp metadata file 
+    '''
+
+    def __init__(self, root_metadata: str) -> None:
+        '''
+        Inits the verification class with the root metadata file
+            Parameters:
+                root_metadata (str):
+
+            Raises:
+                FileNotFoundError - file not found
+                tomli.TomlDecodeError - error in decoding toml file
+                uptane.error.general.MetadataFileHasExpired
+
+            Note:
+                As of now only configured to handle only one timestamp, snapshot, targets
+                key and key type ed25519
+        '''
+        with open(root_metadata, 'rb') as f:
+            toml_dict = tomli.load(f)
+            self.targets_dt = toml_dict["signed"]["roles"]["targets"]["keys"][0]
+            self.snapshot_dt = toml_dict["signed"]["roles"]["snapshot"]["keys"][
+                0]
+            self.timestamp_dt = toml_dict["signed"]["roles"]["timestamp"][
+                "keys"][0]
+
+        if uptane.time.fut24_is_expired(int(toml_dict["signed"]["expires"])):
+            raise uptane.error.general.MetadataFileHasExpired
+
+    def __verify_targets(self, path: str) -> None:
+        '''
+        Verifies whether target file came from trusted source or not
+
+            Parameters:
+                path (str): path to targets metadata file
+            
+            Throws:
+                uptane.error.general.MetadataFileHasExpired 
+                uptane.error.general.MetadataFileInvalidSignature
+                FileNotFoundError - when file is not found
+                toml.TOMLDecodeError
+                uptane.error.general.PublicKeysNoMatch
+        '''
+        targets_metadata_file: str = path + '/targets.toml'
+        image_file: str = path + '/image'
+        sig: str = ''
+        public_key: str = ''
+        image_hash: str = ''
+        metadata_signed: typing.Dict[str, typing.Any] = {}
+        buf_size: int = 0
+
+        with open(targets_metadata_file, 'rb') as f:
+            toml_dict = tomli.load(f)
+            sig = toml_dict["signatures"]["sig"]
+            public_key = toml_dict['signatures']['keyid']
+            image_hash = toml_dict['signed']['image_hash']
+            metadata_signed = toml_dict['signed']
+            buf_size = int(toml_dict["signed"]["image_buf_size"])
+
+        if self.targets_dt["keyid"] != public_key:
+            raise uptane.error.general.PublicKeysNoMatch
+
+        if uptane.time.fut24_is_expired(toml_dict["signed"]["expires"]):
+            raise uptane.error.general.MetadataFileHasExpired
+
+        if not uptane.crypto.sign.verify_sig_metadata(metadata_signed, \
+            uptane.crypto.hash.HashFunc.sha256, uptane.crypto.sign.KeyType.ed25519, public_key, sig):
+            raise uptane.error.general.MetadataFileInvalidSignature
+
+        if uptane.crypto.hash.get_file_hash(image_file, uptane.crypto.hash.HashFunc.sha256, \
+                                            buf_size) != image_hash:
+            raise uptane.error.general.FileHashNoMatch
+
+    def __verify_snapshot(self, path: str) -> None:
+        '''
+        Verifies whether target file came from trusted source or not
+
+            Parameters:
+                path (str): path to targets metadata file
+            
+            Throws:
+                uptane.error.general.MetadataFileHasExpired 
+                uptane.error.general.MetadataFileInvalidSignature
+                FileNotFoundError - when file is not found
+                toml.TOMLDecodeError
+                uptane.error.general.PublicKeysNoMatch 
+        '''
+        targets_metadata_file: str = path + '/targets.toml'
+        snapshot_metadata_file: str = path + '/snapshot.toml'
+        image_file: str = path + '/image'
+        sig: str = ''
+        public_key: str = ''
+        image_hash: str = ''
+        targets_metadata_file_hash: str = ''
+        metadata_signed: typing.Dict[str, typing.Any] = {}
+        buf_size: int = 0
+
+        with open(snapshot_metadata_file, 'rb') as f:
+            toml_dict = tomli.load(f)
+            sig = toml_dict["signatures"]["sig"]
+            public_key = toml_dict['signatures']['keyid']
+
+            image_hash = toml_dict['signed']['image_hash']
+            targets_metadata_file_hash = toml_dict["signed"][
+                "targets_metadata_file_hash"]
+
+            metadata_signed = toml_dict['signed']
+            buf_size = int(toml_dict["signed"]["image_buf_size"])
+
+        if self.snapshot_dt["keyid"] != public_key:
+            raise uptane.error.general.PublicKeysNoMatch
+
+        if uptane.time.fut24_is_expired(toml_dict["signed"]["expires"]):
+            raise uptane.error.general.MetadataFileHasExpired
+
+        if not uptane.crypto.sign.verify_sig_metadata(metadata_signed, \
+            uptane.crypto.hash.HashFunc.sha256, uptane.crypto.sign.KeyType.ed25519, public_key, sig):
+            raise uptane.error.general.MetadataFileInvalidSignature
+
+        if uptane.crypto.hash.get_file_hash(image_file, uptane.crypto.hash.HashFunc.sha256, \
+                                            buf_size) != image_hash:
+            raise uptane.error.general.FileHashNoMatch
+
+        if uptane.crypto.hash.get_file_hash(targets_metadata_file, \
+                uptane.crypto.hash.HashFunc.sha256, buf_size) != targets_metadata_file_hash:
+            raise uptane.error.general.FileHashNoMatch
+
+    def __verify_timestamp(self, path: str) -> None:
+        '''
+        Verifies whether target file came from trusted source or not
+
+            Parameters:
+                path (str): path to targets metadata file
+            
+            Throws:
+                    FileNotFoundError
+                    tomli.TOMLDecodeError
+                    uptane.error.general.FileHashNoMatch
+                    uptane.error.general.PublicKeysNoMatch
+                    uptane.error.general.MetadataFileHasExpired
+                    uptane.error.general.MetadataFileInvalidSignature
+       '''
+        snapshot_metadata_file: str = path + '/snapshot.toml'
+        timestamp_metadata_file: str = path + '/timestamp.toml'
+        sig: str = ''
+        public_key: str = ''
+        image_hash: str = ''
+        snapshot_metadata_file_hash: str = ''
+        metadata_signed: typing.Dict[str, typing.Any] = {}
+        buf_size: int = 0
+
+        with open(timestamp_metadata_file, 'rb') as f:
+            toml_dict = tomli.load(f)
+            sig = toml_dict["signatures"]["sig"]
+            public_key = toml_dict['signatures']['keyid']
+
+            image_hash = toml_dict['signed']['image_hash']
+            snapshot_metadata_file_hash = toml_dict["signed"][
+                "snapshot_metadata_file_hash"]
+
+            metadata_signed = toml_dict['signed']
+            buf_size = int(toml_dict["signed"]["image_buf_size"])
+
+        if self.timestamp_dt["keyid"] != public_key:
+            raise uptane.error.general.PublicKeysNoMatch
+
+        if uptane.time.fut24_is_expired(toml_dict["signed"]["expires"]):
+            raise uptane.error.general.MetadataFileHasExpired
+
+        if not uptane.crypto.sign.verify_sig_metadata(metadata_signed, \
+            uptane.crypto.hash.HashFunc.sha256, uptane.crypto.sign.KeyType.ed25519, public_key, sig):
+            raise uptane.error.general.MetadataFileInvalidSignature
+
+        if uptane.crypto.hash.get_file_hash(snapshot_metadata_file, \
+                uptane.crypto.hash.HashFunc.sha256, buf_size) != snapshot_metadata_file_hash:
+            raise uptane.error.general.FileHashNoMatch
+
+    def verify(self, url: str) -> None:
+        '''
+            Verifies metadata for an image file 
+                Parameters:
+                   url (str): path to the file
+
+                Raises:
+                    FileNotFoundError
+                    tomli.TOMLDecodeError
+                    uptane.error.general.FileHashNoMatch
+                    uptane.error.general.PublicKeysNoMatch
+                    uptane.error.general.MetadataFileHasExpired
+                    uptane.error.general.MetadataFileInvalidSignature
+        '''
+        path = 'public/' + url.replace(URL, '')
+
+        self.__verify_targets(path)
+        self.__verify_snapshot(path)
+        self.__verify_timestamp(path)

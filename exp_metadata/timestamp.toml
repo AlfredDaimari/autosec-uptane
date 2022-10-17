@@ -8,9 +8,9 @@ spec_version = "0.0.1"
 version = "0.0.1"
 expires = ""
 image_name = "name of image"
-latest_image_url = "url of latest image"
-latest_image_size = "size of image"
-latest_image_hash = "hash of image"
-latest_image_version = "version of latest image"
-latest_image_metadata_url = "url of latest image metadata" #snapshot metadata 
+image_url = "url of latest image"
+image_size = "size of image"
+image_hash = "hash of image"
+image_version = "version of latest image"
+snapshot_metadata_file_hash = "url of latest image metadata" #snapshot metadata 
 
