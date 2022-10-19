@@ -1,3 +1,7 @@
+[signatures]
+keyid = "publickey"
+sig = "signature of entire file signed"
+
 [signed]
 _type = "root"
 spec_version = "0.0.1"
@@ -62,7 +66,4 @@ keyid = "public key value"
 
 signed.roles.target.threshold = 2
 
-[signatures]
-keyid = "publickey"
-sig = "signature of entire file signed"
 

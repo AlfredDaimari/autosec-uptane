@@ -2,7 +2,6 @@
 
 import os
 import typing
-import time
 import tomli
 import tomli_w
 import uptane.crypto.hash
@@ -85,12 +84,14 @@ class ManualRole:
 
     '''
 
-    def __init__(self, cfg: str) -> None:
+    def __init__(self, cfg: str, gen_img_metadata: bool = True) -> None:
         '''
         Init Manual Role, configures the role
 
             Parameters:
                 cfg (str): path to the role configuration toml file
+                gen_img_metadata (bool) [Optional, Default: True]: default behaviour, generates 
+                image metadata
 
             Raises:
                 FileNotFoundError - when toml file is not found 
@@ -116,18 +117,19 @@ class ManualRole:
             self.signed_dict: typing.Dict[str, typing.Any] = {}
             self.signature_dict: typing.Dict[str, typing.Any] = {}
 
-            self.__gen_cfg_metadata()
+            self.__gen_cfg_metadata(gen_img_metadata)
 
-    def __gen_cfg_metadata(self) -> None:
+    def __gen_cfg_metadata(self, gen_img_metadata: bool = True) -> None:
         '''
         Generates the cfg metadata for the image metadata file
         '''
         self.signature_dict["keyid"] = self.public_key
         self.signature_dict["sig"] = ""
         self.signature_dict["key_type"] = self.key_type
-        self.signed_dict["image_hash_func"] = self.hash_function
-        self.signed_dict["image_buf_size"] = self.bufsize
-        self.signed_dict["image_sig_algo"] = self.sig_algo
+        if gen_img_metadata:
+            self.signed_dict["image_hash_func"] = self.hash_function
+            self.signed_dict["image_buf_size"] = self.bufsize
+            self.signed_dict["image_sig_algo"] = self.sig_algo
 
     def gen_signed_metadata_file(self, metadata_file: str) -> None:
         '''
@@ -226,6 +228,8 @@ class Verification:
         '''
         with open(root_metadata, 'rb') as f:
             toml_dict = tomli.load(f)
+            self.root_dt = toml_dict["signed"]["keys"][0]
+            self.root_signed = toml_dict["signed"]
             self.targets_dt = toml_dict["signed"]["roles"]["targets"]["keys"][0]
             self.snapshot_dt = toml_dict["signed"]["roles"]["snapshot"]["keys"][
                 0]
@@ -235,6 +239,23 @@ class Verification:
         if uptane.time.fut24_is_expired(int(toml_dict["signed"]["expires"])):
             raise uptane.error.general.MetadataFileHasExpired
 
+    def __verify_root(self):
+        '''
+        Verifies whether the root has signed with his key or not
+
+            Raises:
+                uptane.error.general.MetadataFileHasExpired
+                uptane.error.general.MetadataFileInvalidSignature
+        '''
+        sig = self.root_signed["signatures"]["sig"]
+
+        if uptane.time.fut24_is_expired(self.root_signed["expires"]):
+            raise uptane.error.general.MetadataFileHasExpired
+
+        if not uptane.crypto.sign.verify_sig_metadata(self.root_signed, \
+            uptane.crypt.HashFunc.sha256, uptane.crypto.sign,KeyType.ed25519, self.root_dt, sig):
+            raise uptane.error.general.MetadataFileInvalidSignature
+
     def __verify_targets(self, path: str) -> None:
         '''
         Verifies whether target file came from trusted source or not
@@ -242,7 +263,7 @@ class Verification:
             Parameters:
                 path (str): path to targets metadata file
             
-            Throws:
+            Raises:
                 uptane.error.general.MetadataFileHasExpired 
                 uptane.error.general.MetadataFileInvalidSignature
                 FileNotFoundError - when file is not found
@@ -398,7 +419,8 @@ class Verification:
                     uptane.error.general.MetadataFileInvalidSignature
         '''
         path = 'public/' + url.replace(URL, '')
-
+        
+        self.__verify_root()
         self.__verify_targets(path)
         self.__verify_snapshot(path)
         self.__verify_timestamp(path)

@@ -1,0 +1,22 @@
+# configuration file for role
+role = "root"
+key_type = "ed25519"
+private_key = "private key in pem format"
+public_key = "public key in pem format"
+
+# root metadata config for different roles 
+[targets]
+key_type = "ed25519"
+public_key = "public key in pem format"
+
+[snapshot]
+key_type = "ed25519"
+public_key = "public key in pem format"
+
+[timestamp]
+key_type = "ed25519"
+public_key = "public key in pem format"
+
+[signature]
+algorithm = "eddsa"   
+
