@@ -36,7 +36,7 @@ class AutoRole:
                 FileNotFoundError
         '''
         with open(cfg, "rb") as f:
-            toml_dict = tomli.load(f)
+            self.toml_dict = tomli.load(f)
             self.online_key = toml_dict["key"]
             self.role = toml_dict["role"]
             # TODO - comeup with cfg file structure
@@ -104,6 +104,7 @@ class ManualRole:
         with open(cfg, "rb") as f:
 
             toml_dict = tomli.load(f)
+            self.cfg_toml_dict = toml_dict
             self.private_key = toml_dict["private_key"]
             self.role = toml_dict["role"]
             self.public_key = toml_dict["public_key"]
@@ -118,6 +119,7 @@ class ManualRole:
             self.signature_dict: typing.Dict[str, typing.Any] = {}
 
             self.__gen_cfg_metadata(gen_img_metadata)
+            self.cfg_toml_dict = toml_dict
 
     def __gen_cfg_metadata(self, gen_img_metadata: bool = True) -> None:
         '''
@@ -253,7 +255,7 @@ class Verification:
             raise uptane.error.general.MetadataFileHasExpired
 
         if not uptane.crypto.sign.verify_sig_metadata(self.root_signed, \
-            uptane.crypt.HashFunc.sha256, uptane.crypto.sign,KeyType.ed25519, self.root_dt, sig):
+            uptane.crypto.hash.HashFunc.sha256, uptane.crypto.sign.KeyType.ed25519, self.root_dt, sig):
             raise uptane.error.general.MetadataFileInvalidSignature
 
     def __verify_targets(self, path: str) -> None:
@@ -419,7 +421,7 @@ class Verification:
                     uptane.error.general.MetadataFileInvalidSignature
         '''
         path = 'public/' + url.replace(URL, '')
-        
+
         self.__verify_root()
         self.__verify_targets(path)
         self.__verify_snapshot(path)
