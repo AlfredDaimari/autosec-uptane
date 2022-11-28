@@ -6,7 +6,7 @@ public_key = "public key in pem format"
 
 # hash configuration
 [hash]
-buffsize = 65536    # default is 8kb 
+bufsize = 65536    # default is 8kb 
 function = "hash function to be used"
 
 [signature]

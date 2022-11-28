@@ -37,8 +37,8 @@ class AutoRole:
         '''
         with open(cfg, "rb") as f:
             self.toml_dict = tomli.load(f)
-            self.online_key = toml_dict["key"]
-            self.role = toml_dict["role"]
+            self.online_key = self.toml_dict["key"]
+            self.role = self.toml_dict["role"]
             # TODO - comeup with cfg file structure
 
     def get_expr_time(self,

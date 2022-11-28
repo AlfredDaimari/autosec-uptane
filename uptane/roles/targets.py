@@ -1,8 +1,5 @@
 # file for implementing targets role
-
-import pathlib
-from uptane.roles.role import AutoRole, ManualRole, TarSnapManualRole
-from typing import Dict, Any
+from uptane.roles.role import AutoRole, TarSnapManualRole
 
 ONLINE_TARGETS_SPEC_VERSION = "0.0.1"
 OFFLINE_TARGETS_SPEC_VERSION = "0.0.1"

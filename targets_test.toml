@@ -1,0 +1,14 @@
+# configuration file for role
+role = "targets"
+key_type = "ed25519"
+private_key = "-----BEGIN PRIVATE KEY-----\nMC4CAQAwBQYDK2VwBCIEICmJQ6akQrP70HahEkAv+XXxQGei1kv1A2jSjVVYLk85\n-----END PRIVATE KEY-----"
+public_key = "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAykIrdk+tfz1upRaa+AXMjW32H3ehEczxA590FsNYhmI=\n-----END PUBLIC KEY-----"
+
+# hash configuration
+[hash]
+bufsize = 65536    # default is 8kb 
+function = "sha256"
+
+[signature]
+algorithm = "eddsa"   
+

@@ -51,7 +51,8 @@ def sign_metadata(metadata: Dict[str, Any], hashf: HashFunc, ktype: KeyType,
 
     if ktype == KeyType.ed25519:
         private_key = ECC.import_key(key)
-        signor = eddsa.new(private_key, b'rfc8032')
+        # the error shown here in the ide is wrongly displayed
+        signor = eddsa.new(private_key, 'rfc8032')
         signature = signor.sign(bytes(hashed_payload, 'utf-8'))
 
     signature = base64.b64encode(signature)
@@ -85,7 +86,8 @@ def verify_sig_metadata(metadata: Dict[str, Any], hashf: HashFunc,
 
     if ktype == KeyType.ed25519:
         public_key = ECC.import_key(pub_key)
-        verifier = eddsa.new(public_key, b'rfc8032')
+        # the error show here in the ide is wrongly displayed
+        verifier = eddsa.new(public_key, 'rfc8032')
         try:
             verifier.verify(bytes(hashed_payload, 'utf-8'),
                             base64.b64decode(signature))
