@@ -69,5 +69,5 @@ class TimestampOffline(ManualRole):
         uptane.crypto.hash.HashFunc.sha256, self.bufsize)
 
         if uptane.time.fut24_is_expired(
-                int(self.snapshot_metadata_file_dict["expires"])):
+                int(self.snapshot_metadata_file_dict["signed"]["expires"])):
             raise MetadataFileHasExpired

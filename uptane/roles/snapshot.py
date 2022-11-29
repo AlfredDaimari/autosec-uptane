@@ -71,7 +71,7 @@ class SnapshotOffline(TarSnapManualRole):
         uptane.crypto.hash.HashFunc.sha256, self.bufsize)
 
         if uptane.time.fut24_is_expired(
-                int(self.targets_metadata_file_dict["expires"])):
+                int(self.targets_metadata_file_dict["signed"]["expires"])):
             raise MetadataFileHasExpired
 
         if self.signed_dict["image_hash"] != self.targets_metadata_file_dict[
