@@ -2,6 +2,7 @@
 import argparse
 import roles.targets
 import roles.snapshot
+import roles.timestamp
 
 
 def main():
@@ -27,6 +28,9 @@ def main():
     if args["role"] == "timestamp" and args["offline"]:
         if args.get("smetafile") is None:
             print("--smetafile argument not given")
+
+        tg = roles.timestamp.TimestampOffline(args["rcfg"], args["icfg"], args["smetafile"])
+        tg.gen_signed_metadata_file(args["name"])
 
     if args["role"] == "snapshot" and args["offline"]:
         if args.get("tmetafile") is None:
