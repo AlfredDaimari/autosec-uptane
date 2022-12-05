@@ -1,0 +1,4 @@
+local_path = "test2.txt"
+_name = "test_image2"
+_url = "https://www.autosec.com/test_image"
+_version = "0.0.2"

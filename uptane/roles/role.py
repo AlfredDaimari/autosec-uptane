@@ -115,8 +115,8 @@ class ManualRole:
 
             self.sig_algo = toml_dict["signature"]["algorithm"]
 
-            self.signed_dict: typing.Dict[str, typing.Any] = {}
-            self.signature_dict: typing.Dict[str, typing.Any] = {}
+            self.signed_dict: typing.Dict = {}
+            self.signature_dict: typing.Dict = {}
 
             self.__gen_cfg_metadata(gen_img_metadata)
             self.cfg_toml_dict = toml_dict
@@ -165,7 +165,7 @@ class TarSnapManualRole(ManualRole):
         - generate metadata file signature
     '''
 
-    def __init__(self, cfg, image_cfg: str) -> None:
+    def __init__(self, cfg, image_cfg: str = 'None') -> None:
         '''
         Inits the common metadata between Targets and Snapshot
         Common Metadata:
@@ -175,20 +175,21 @@ class TarSnapManualRole(ManualRole):
             - image_size 
             - image_hash 
         '''
-        ManualRole.__init__(self, cfg)
+        ManualRole.__init__(self, cfg, False if image_cfg is 'None' else True)
         self.image_cfg_toml_dict: typing.Dict[str, typing.Any] = {}
 
-        with open(image_cfg, "rb") as f:
-            toml_dict = tomli.load(f)
-            self.local_image_path: str = toml_dict['local_path']
-            self.signed_dict["image_name"] = toml_dict["_name"]
-            self.signed_dict["image_url"] = toml_dict["_url"]
-            self.signed_dict["image_version"] = toml_dict["_version"]
-            self.signed_dict["image_size"] = self.__get_file_size()
-            self.signed_dict["image_hash"] = \
-            uptane.crypto.hash.get_file_hash(self.local_image_path, \
-            uptane.crypto.hash.HashFunc.sha256, self.bufsize)
-            self.image_cfg_toml_dict = toml_dict  # for latter use
+        if image_cfg != 'None':
+            with open(image_cfg, "rb") as f:
+                toml_dict = tomli.load(f)
+                self.local_image_path: str = toml_dict['local_path']
+                self.signed_dict["image_name"] = toml_dict["_name"]
+                self.signed_dict["image_url"] = toml_dict["_url"]
+                self.signed_dict["image_version"] = toml_dict["_version"]
+                self.signed_dict["image_size"] = self.__get_file_size()
+                self.signed_dict["image_hash"] = \
+                uptane.crypto.hash.get_file_hash(self.local_image_path, \
+                uptane.crypto.hash.HashFunc.sha256, self.bufsize)
+                self.image_cfg_toml_dict = toml_dict  # for latter use
 
     def __get_file_size(self) -> int:
         return os.path.getsize(self.local_image_path)
@@ -316,13 +317,9 @@ class Verification:
                 toml.TOMLDecodeError
                 uptane.error.general.PublicKeysNoMatch 
         '''
-        targets_metadata_file: str = path + '/targets.toml'
         snapshot_metadata_file: str = path + '/snapshot.toml'
-        image_file: str = path + '/image'
         sig: str = ''
         public_key: str = ''
-        image_hash: str = ''
-        targets_metadata_file_hash: str = ''
         metadata_signed: typing.Dict[str, typing.Any] = {}
         buf_size: int = 0
 
@@ -330,11 +327,6 @@ class Verification:
             toml_dict = tomli.load(f)
             sig = toml_dict["signatures"]["sig"]
             public_key = toml_dict['signatures']['keyid']
-
-            image_hash = toml_dict['signed']['image_hash']
-            targets_metadata_file_hash = toml_dict["signed"][
-                "targets_metadata_file_hash"]
-
             metadata_signed = toml_dict['signed']
             buf_size = int(toml_dict["signed"]["image_buf_size"])
 
@@ -348,13 +340,16 @@ class Verification:
             uptane.crypto.hash.HashFunc.sha256, uptane.crypto.sign.KeyType.ed25519, public_key, sig):
             raise uptane.error.general.MetadataFileInvalidSignature
 
-        if uptane.crypto.hash.get_file_hash(image_file, uptane.crypto.hash.HashFunc.sha256, \
-                                            buf_size) != image_hash:
-            raise uptane.error.general.FileHashNoMatch
+       
+        # check hash of each metadata file
+        for targets_metadata_file_k in metadata_signed["targets"]:
+            targets_metadata_file = path + '/' + targets_metadata_file_k
+            targets_metadata_file_hash = metadata_signed["targets"][
+                targets_metadata_file_k]["hash"]
 
-        if uptane.crypto.hash.get_file_hash(targets_metadata_file, \
+            if uptane.crypto.hash.get_file_hash(targets_metadata_file, \
                 uptane.crypto.hash.HashFunc.sha256, buf_size) != targets_metadata_file_hash:
-            raise uptane.error.general.FileHashNoMatch
+                raise uptane.error.general.FileHashNoMatch
 
     def __verify_timestamp(self, path: str) -> None:
         '''

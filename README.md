@@ -1,6 +1,9 @@
 Uptane 2.0.0 Implementation
 ======
 ### Note: ONLY COVERS LATEST IMAGE
-The image database will only contain the latest verified image for each ecu type. Since
-the image database will only send the latest image metadata to the director database, the
-director database will also generate metadata for the latest verified image database.
+
+### Naming Conventions (currently not automated)
+Targets = image_version.image_name.targets.toml
+Snapshot = snapshot_version.sub_repo_name.snapshot.toml
+Timestamp = timestamp_version.sub_repo_name.timestamp.toml 
+Root = root_version.url.root.toml

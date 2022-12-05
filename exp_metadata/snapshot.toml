@@ -7,12 +7,11 @@ _type = "snapshot"
 spec_version = "0.0.1"
 version = "0.0.1"
 expires = ""
-image_name = "name of image"
-image_url = "image url image"
-image_size = "size of image"
-image_hash = "hash of image"
-image_buf_size = 'buffer reading'
-image_hash_func = "function used to hash the image"
-image_sig_algo = "algorithm used for generating signature"
-image_version = "version of image"
-targets_metadata_file_hash = "hash of the targets metadata file"
+
+[signed.targets.name_of_tagets_metadata_file]
+hash = "hash of tagets metadata file"
+version = "" # to be implemented
+
+[signed.targets.name_of_targets_metadata_file]
+hash = "hash of targets metadata file"
+version = "" # to be implemented
