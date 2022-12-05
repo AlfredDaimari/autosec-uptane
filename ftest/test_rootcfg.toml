@@ -1,0 +1,22 @@
+# configuration file for role
+role = "root"
+key_type = "ed25519"
+private_key = "-----BEGIN PRIVATE KEY-----\nMC4CAQAwBQYDK2VwBCIEIPUb3tScSes2T4UXEvFhUhl6jQKyDLApoBxNuaZS+SuN\n-----END PRIVATE KEY-----"
+public_key = "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAagoAd219oXNoWhq4rFkMzGwAiNIQ4XDXyJb4C/w44Dw=\n-----END PUBLIC KEY-----"
+
+# root metadata config for different roles 
+[targets]
+key_type = "ed25519"
+public_key = "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAykIrdk+tfz1upRaa+AXMjW32H3ehEczxA590FsNYhmI=\n-----END PUBLIC KEY-----"
+
+[snapshot]
+key_type = "ed25519"
+public_key = "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAFykzm7aHONpKpdZIyyE48kBXl6SS2NdyafGsI0+4zlA=\n-----END PUBLIC KEY-----"
+
+[timestamp]
+key_type = "ed25519"
+public_key = "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAFykzm7aHONpKpdZIyyE48kBXl6SS2NdyafGsI0+4zlA=\n-----END PUBLIC KEY-----"
+
+[signature]
+algorithm = "eddsa"   
+

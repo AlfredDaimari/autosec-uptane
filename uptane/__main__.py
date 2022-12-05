@@ -1,9 +1,10 @@
 # parse command-line arguments
 import argparse
 import typing
-import roles.targets
-import roles.snapshot
-import roles.timestamp
+import uptane.roles.root
+import uptane.roles.targets
+import uptane.roles.snapshot
+import uptane.roles.timestamp
 import uptane.verify
 
 
@@ -19,13 +20,17 @@ def exec_offline_metadata_gen(args: typing.Dict[str, typing.Any]):
         print("--name argument not given")
         exit(1)
 
+    if args["role"] == "root":
+        rg = uptane.roles.root.Root(args["rcfg"])
+        rg.gen_signed_metadata_file(args["name"])
+
     if args["role"] == "timestamp":
 
         if args.get("smetafile") is None:
             print("--smetafile argument not given")
             exit(1)
 
-        tg = roles.timestamp.TimestampOffline(args["rcfg"], args["smetafile"])
+        tg = uptane.roles.timestamp.TimestampOffline(args["rcfg"], args["smetafile"])
         tg.gen_signed_metadata_file(args["name"])
 
     if args["role"] == "snapshot":
@@ -34,7 +39,7 @@ def exec_offline_metadata_gen(args: typing.Dict[str, typing.Any]):
             print("--tmetafile argument not given")
             exit(1)
 
-        sg = roles.snapshot.SnapshotOffline(args["rcfg"], args["tmetafile"])
+        sg = uptane.roles.snapshot.SnapshotOffline(args["rcfg"], args["tmetafile"])
         sg.gen_signed_metadata_file(args["name"])
 
     if args["role"] == "targets":
@@ -43,7 +48,7 @@ def exec_offline_metadata_gen(args: typing.Dict[str, typing.Any]):
             print("--icfg argument is not given")
             exit(1)
 
-        tg = roles.targets.TargetsOffline(args["rcfg"], args["icfg"])
+        tg = uptane.roles.targets.TargetsOffline(args["rcfg"], args["icfg"])
         tg.gen_signed_metadata_file(args["name"])
 
 
