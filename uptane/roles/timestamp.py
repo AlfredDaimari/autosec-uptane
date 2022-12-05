@@ -28,8 +28,7 @@ class TimestampOnline(AutoRole):
 
 class TimestampOffline(ManualRole):
 
-    def __init__(self, cfg: str, image_cfg: str,
-                 snapshot_metadata_file: str) -> None:
+    def __init__(self, cfg: str, snapshot_metadata_file: str) -> None:
         '''
         Init Timestamp Role, generates metadata for Snapshot metadata file
 
@@ -41,21 +40,13 @@ class TimestampOffline(ManualRole):
             Raises:
                 tomli.TOMLDecodeError
         '''
-        ManualRole.__init__(self, cfg)
+        ManualRole.__init__(self, cfg, gen_img_metadata=False)
         self.snapshot_metadata_file = snapshot_metadata_file
 
         with open(snapshot_metadata_file, "rb") as f:
             self.snapshot_metadata_file_dict = tomli.load(f)
 
-        with open(image_cfg, "rb") as f:
-            toml_dict = tomli.load(f)
-            self.signed_dict["image_name"] = toml_dict["_name"]
-            self.signed_dict["image_url"] = toml_dict["_url"]
-            self.signed_dict["image_version"] = toml_dict["_version"]
-            self.signed_dict["spec_version"] = OFFLINE_TIMESTAMP_SPEC_VERSION
-            self.signed_dict["_type"] = "timestamp"
-
-            self.__gen_cfg_metadata()
+        self.signed_dict["bufsize"] = self.bufsize
 
     def __gen_cfg_metadata(self) -> None:
         '''
@@ -68,6 +59,6 @@ class TimestampOffline(ManualRole):
         uptane.crypto.hash.get_file_hash(self.snapshot_metadata_file, \
         uptane.crypto.hash.HashFunc.sha256, self.bufsize)
 
-        if uptane.time.fut24_is_expired(
+        if uptane.time.fut_is_expired(
                 int(self.snapshot_metadata_file_dict["signed"]["expires"])):
             raise MetadataFileHasExpired

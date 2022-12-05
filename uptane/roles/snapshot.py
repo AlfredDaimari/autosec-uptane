@@ -54,6 +54,7 @@ class SnapshotOffline(TarSnapManualRole):
 
                 self.signed_dict["spec_version"] = OFFLINE_SNAPSHOT_SPEC_VERSION
                 self.signed_dict["_type"] = "snapshot"
+                self.signed_dict["bufsize"] = self.bufsize
 
         self.__generate_metadata()
 
@@ -71,7 +72,7 @@ class SnapshotOffline(TarSnapManualRole):
             uptane.crypto.hash.get_file_hash(targets_metadata_file, \
             uptane.crypto.hash.HashFunc.sha256, self.bufsize)
 
-            if uptane.time.fut24_is_expired(
+            if uptane.time.fut_is_expired(
                     int(self.targets[targets_metadata_file]["signed"]
                         ["expires"])):
                 raise MetadataFileHasExpired

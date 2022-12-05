@@ -7,10 +7,6 @@ _type = "timestamp"
 spec_version = "0.0.1"
 version = "0.0.1"
 expires = ""
-image_name = "name of image"
-image_url = "url of latest image"
-image_size = "size of image"
-image_hash = "hash of image"
-image_version = "version of latest image"
+bufsize = 64372
 snapshot_metadata_file_hash = "url of latest image metadata" #snapshot metadata 
 

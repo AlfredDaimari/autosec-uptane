@@ -1,4 +1,4 @@
-[signatures]
+[signature]
 keyid = "publickey"
 sig = "signature of signed portion"
 
@@ -7,6 +7,7 @@ _type = "snapshot"
 spec_version = "0.0.1"
 version = "0.0.1"
 expires = ""
+bufsize = 64372
 
 [signed.targets.name_of_tagets_metadata_file]
 hash = "hash of tagets metadata file"

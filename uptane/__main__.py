@@ -1,22 +1,76 @@
 # parse command-line arguments
 import argparse
+import typing
 import roles.targets
 import roles.snapshot
 import roles.timestamp
 
 
+def exec_offline_metadata_gen(args: typing.Dict[str, typing.Any]):
+    '''
+    Execute offline metadata program
+    '''
+    if args["rcfg"] is None:
+        print("--rcfg command not given, role config file not given")
+        exit(1)
+
+    if args["name"] is None:
+        print("--name argument not given")
+        exit(1)
+
+    if args["role"] == "timestamp":
+
+        if args.get("smetafile") is None:
+            print("--smetafile argument not given")
+            exit(1)
+
+        tg = roles.timestamp.TimestampOffline(args["rcfg"], args["smetafile"])
+        tg.gen_signed_metadata_file(args["name"])
+
+    if args["role"] == "snapshot":
+
+        if args.get("tmetafile") is None:
+            print("--tmetafile argument not given")
+            exit(1)
+
+        sg = roles.snapshot.SnapshotOffline(args["rcfg"], args["tmetafile"])
+        sg.gen_signed_metadata_file(args["name"])
+
+    if args["role"] == "targets":
+
+        if args["icfg"] is None:
+            print("--icfg argument is not given")
+            exit(1)
+
+        tg = roles.targets.TargetsOffline(args["rcfg"], args["icfg"])
+        tg.gen_signed_metadata_file(args["name"])
+
+
+def exec_server_gen(args: typing.Dict[str, typing.Any]):
+    '''
+    Execute server generating program
+    '''
+    pass
+
+
 def main():
     print("autosec_uptane version 0.0.1")
+
+    # argument parser for generating metadata
     parser = argparse.ArgumentParser(
         prog="uptane",
-        description="a cmd program for creating metadata for uptane framework")
-    parser.add_argument("--role",
-                        help="the role ? [timestamp, snapshot, targets]",
-                        choices=["timestamp", "snapshot", "targets"],
-                        required=True)
-    parser.add_argument("--rcfg",
-                        help="the config file for the role?",
-                        required=True)
+        description=
+        "a cmd program for creating metadata, image repo, director repo for uptane framework",
+        usage="%(prog)s [command] [options]")
+    parser.add_argument(
+        "--role",
+        help="the role ? [timestamp, snapshot, targets]",
+        choices=["timestamp", "snapshot", "targets"],
+    )
+    parser.add_argument(
+        "--rcfg",
+        help="the config file for the role?",
+    )
     parser.add_argument("--icfg", help="the config file for the image?")
     parser.add_argument("--offline",
                         help="whether the role is online or offline",
@@ -28,39 +82,24 @@ def main():
         help="names of all target metadata file wanted in snapshot")
     parser.add_argument("-s", "--smetafile", help="the snapshot metadata file")
     parser.add_argument("--name", help="name of the metadata file to output to")
+    parser.add_argument(
+        "command",
+        help=
+        "metadata - command for generating metadata, server - command for generating a server"
+    )
+
+    # parsing args
     args = parser.parse_args()
     args = vars(args)
     print(args)
 
-    if args["role"] == "timestamp" and args["offline"]:
-        if args.get("smetafile") is None:
-            print("--smetafile argument not given")
+    if args["command"] == "metadata" and args["offline"]:
+        handle_offline_metadata_generation(args)
 
-        if args["name"] is None:
-            print("--name argument not given")
-        #tg = roles.timestamp.TimestampOffline(args["rcfg"], args["icfg"],
-        #                                      args["smetafile"])
-        #tg.gen_signed_metadata_file(args["name"])
-
-    if args["role"] == "snapshot" and args["offline"]:
-        if args.get("tmetafile") is None:
-            print("--tmetafile argument not given")
-            exit(1)
-        if args["name"] is None:
-            print("--name argument not given")
-
-        sg = roles.snapshot.SnapshotOffline(args["rcfg"], args["tmetafile"])
-        sg.gen_signed_metadata_file(args["name"])
-
-    if args["role"] == "targets" and args["offline"]:
-        if args["name"] is None:
-            print("--name argument not given")
-
-        if args["icfg"] is None:
-            print("--icfg argument is not given")
-
-        tg = roles.targets.TargetsOffline(args["rcfg"], args["icfg"])
-        tg.gen_signed_metadata_file(args["name"])
+    elif args["command"] == "server":
+        handle_server_generation(args)
+    else:
+        print(f'{args["command"]} not recognized')
 
 
 if __name__ == "__main__":

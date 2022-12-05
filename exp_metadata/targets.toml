@@ -1,4 +1,4 @@
-[signatures]
+[signature]
 keyid = "publickey"
 sig = "signature of signed portion"
 
