@@ -4,6 +4,7 @@ import typing
 import roles.targets
 import roles.snapshot
 import roles.timestamp
+import uptane.verify
 
 
 def exec_offline_metadata_gen(args: typing.Dict[str, typing.Any]):
@@ -52,6 +53,30 @@ def exec_server_gen(args: typing.Dict[str, typing.Any]):
     '''
     pass
 
+def exec_verify_metadata(args: typing.Dict[str, typing.Any]):
+    '''
+    Execute verification program
+    '''
+    if args.get("smetafile") is None:
+            print("--smetafile argument not given")
+            exit(1)
+    
+    if args.get("tsmetafile") is None:
+            print("--tsmetafile argument not given")
+            exit(1)
+    
+    if args.get("tmetadir") is None:
+            print("--tmetadir argument not given")
+            exit(1)
+
+    if args.get("rmetafile") is None:
+        print("--rmetafile argument not given")
+        exit(1)
+
+    vef = uptane.verify.Verification(root_metadata_file_path=args["rmetafile"], \
+        targets_files_dir_path=args["tmetadir"], snapshot_metadata_file_path=args["snapshot_metadata_file_path"], \
+        timestamp_metadata_file_path=args["tsmetafile"])
+    vef.verify()
 
 def main():
     print("autosec_uptane version 0.0.1")
@@ -62,6 +87,7 @@ def main():
         description=
         "a cmd program for creating metadata, image repo, director repo for uptane framework",
         usage="%(prog)s [command] [options]")
+    
     parser.add_argument(
         "--role",
         help="the role ? [timestamp, snapshot, targets]",
@@ -75,17 +101,22 @@ def main():
     parser.add_argument("--offline",
                         help="whether the role is online or offline",
                         action="store_true")
+    
     parser.add_argument(
         "-t",
         "--tmetafile",
         action="append",
         help="names of all target metadata file wanted in snapshot")
+
+    parser.add_argument("--tmetadir", help="dir of targets metadata, images [choice for verify]")
     parser.add_argument("-s", "--smetafile", help="the snapshot metadata file")
+    parser.add_argument("--tsmetafile", help="the timestamp metadata file")
+    parser.add_argument("-r", "--rmetafile", help="the root metadata file")
     parser.add_argument("--name", help="name of the metadata file to output to")
     parser.add_argument(
         "command",
         help=
-        "metadata - command for generating metadata, server - command for generating a server"
+        "metadata - command for generating metadata, server - command for generating a server, verify - command for verifying metadata"
     )
 
     # parsing args
@@ -93,11 +124,13 @@ def main():
     args = vars(args)
     print(args)
 
-    if args["command"] == "metadata" and args["offline"]:
-        handle_offline_metadata_generation(args)
+    if args["command"] == "metadata" and args["offline"] and args["role"] is not None:
+        exec_offline_metadata_gen(args)
 
     elif args["command"] == "server":
-        handle_server_generation(args)
+        exec_server_gen(args)
+    elif args["command"] == "verify":
+        exec_verify_metadata(args)
     else:
         print(f'{args["command"]} not recognized')
 
