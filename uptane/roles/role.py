@@ -175,7 +175,7 @@ class TarSnapManualRole(ManualRole):
             - image_size 
             - image_hash 
         '''
-        ManualRole.__init__(self, cfg, False if image_cfg is 'None' else True)
+        ManualRole.__init__(self, cfg, False if image_cfg == 'None' else True)
         self.image_cfg_toml_dict: typing.Dict[str, typing.Any] = {}
 
         if image_cfg != 'None':
