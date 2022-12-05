@@ -20,3 +20,6 @@ public_key = "public key in pem format"
 [signature]
 algorithm = "eddsa"   
 
+[hash]
+function = "sha256"
+bufsize = 65536

@@ -17,6 +17,10 @@ public_key = "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAFykzm7aHONpKpdZIyyE48k
 key_type = "ed25519"
 public_key = "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAFykzm7aHONpKpdZIyyE48kBXl6SS2NdyafGsI0+4zlA=\n-----END PUBLIC KEY-----"
 
+[hash]
+function="sha256"
+bufsize = 65536
+
 [signature]
 algorithm = "eddsa"   
 

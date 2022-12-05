@@ -95,8 +95,8 @@ def main():
     
     parser.add_argument(
         "--role",
-        help="the role ? [timestamp, snapshot, targets]",
-        choices=["timestamp", "snapshot", "targets"],
+        help="the role ? [timestamp, snapshot, targets, root]",
+        choices=["timestamp", "snapshot", "targets", "root"],
     )
     parser.add_argument(
         "--rcfg",
