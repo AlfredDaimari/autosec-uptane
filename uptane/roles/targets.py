@@ -1,24 +1,24 @@
 # file for implementing targets role
-from uptane.roles.role import AutoRole, TarSnapManualRole
+from uptane.roles.role import TarSnapManualRole, TarSnapAutoRole
+import typing
 
 ONLINE_TARGETS_SPEC_VERSION = "0.0.1"
 OFFLINE_TARGETS_SPEC_VERSION = "0.0.1"
 
 
-class TargetsOnline(AutoRole):
+class TargetsOnline(TarSnapAutoRole):
     '''
     Targets roles 
     This role will sign the image metadata on demand on the server
     '''
 
     def __init__(self, cfg: str) -> None:
-        AutoRole.__init__(self, cfg)
+        TarSnapAutoRole.__init__(self, cfg)
+        self.signed_dict["spec_version"] = str(ONLINE_TARGETS_SPEC_VERSION)
+        self.signed_dict["_type"] = "targets"
 
-    def sign_image_metadata(self, image_metadata_file) -> None:
-        '''
-        Sign image metadata
-        '''
-        self.sign_metadata(image_metadata_file)
+    def targetsoneline_reinit(self, image_cfg: typing.Any):
+        self.tarsnapauto_reinit(image_cfg)
 
 
 # verification function to verify the image toml file

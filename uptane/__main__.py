@@ -5,8 +5,9 @@ import uptane.roles.root
 import uptane.roles.targets
 import uptane.roles.snapshot
 import uptane.roles.timestamp
+import uptane.repository.inventorydb
+import uptane.repository.directordb
 import uptane.verify
-
 
 def exec_offline_metadata_gen(args: typing.Dict[str, typing.Any]):
     '''

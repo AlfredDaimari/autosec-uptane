@@ -1,27 +1,60 @@
 # snapshot role
 import uptane.crypto.hash
 import uptane.time
-from uptane.roles.role import AutoRole, TarSnapManualRole
+from uptane.roles.role import TarSnapAutoRole, TarSnapManualRole
 import tomli
-from uptane.error.general import FileHashNoMatch, MetadataFileHasExpired
+from uptane.error.general import MetadataFileHasExpired
 
 ONLINE_SNAPSHOT_SPEC_VERSION = "0.0.1"
 OFFLINE_SNAPSHOT_SPEC_VERSION = "0.0.1"
 
 
-class SnapshotOnline(AutoRole):
+class SnapshotOnline(TarSnapAutoRole):
     '''
         Class inheriting the Snapshot role of Uptane
     '''
 
     def __init__(self, cfg: str) -> None:
-        AutoRole.__init__(self, cfg)
+        TarSnapAutoRole.__init__(self, cfg)
+        self.targets = {}
+        self.signed_dict["targets"] = {}
+        self.signed_dict["spec_version"] = ONLINE_SNAPSHOT_SPEC_VERSION
+        self.signed_dict["_type"] = "snapshot"
+        self.signed_dict["bufsize"] = self.bufsize
+        self.targets_metadata_files = []
 
-    def sign_targets_metadata(self, metadata_file) -> None:
+    def snapshotonline_reinit(self, targets_metadata_files: list[str]) -> None:
         '''
-        Sign the metadata file received from Target Role
+        create metadata files for the list of files
         '''
-        self.sign_metadata(metadata_file)
+        self.tarsnapauto_reinit(None)
+        self.targets = {}
+        self.targets_metadata_files = targets_metadata_files
+        for targets_metadata_file in targets_metadata_files:
+            with open(targets_metadata_file, "rb") as f:
+                # loading toml of all targets_metadata_file
+                self.targets[targets_metadata_file] = tomli.load(f)
+
+        self.__generate_metadata()
+
+    def __generate_metadata(self) -> None:
+        '''
+        Populate the signed dict that will be converted to a toml file
+
+        NOTE: Important - for now it verfies the targets image hash with only sha256 hash 
+        using anyother func will ultimately make it fail
+        '''
+        for targets_metadata_file in self.targets_metadata_files:
+
+            self.signed_dict["targets"][targets_metadata_file] = {}
+            self.signed_dict["targets"][targets_metadata_file]["hash"] = \
+            uptane.crypto.hash.get_file_hash(targets_metadata_file, \
+            uptane.crypto.hash.HashFunc.sha256, self.bufsize)
+
+            if uptane.time.fut_is_expired(
+                    int(self.targets[targets_metadata_file]["signed"]
+                        ["expires"])):
+                raise MetadataFileHasExpired
 
 
 class SnapshotOffline(TarSnapManualRole):
@@ -45,16 +78,14 @@ class SnapshotOffline(TarSnapManualRole):
         self.targets_metadata_files = targets_metadata_files
         self.targets = {}
         self.signed_dict["targets"] = {}
+        self.signed_dict["spec_version"] = OFFLINE_SNAPSHOT_SPEC_VERSION
+        self.signed_dict["_type"] = "snapshot"
+        self.signed_dict["bufsize"] = self.bufsize
 
         for targets_metadata_file in targets_metadata_files:
             with open(targets_metadata_file, "rb") as f:
-
                 # loading toml of all targets_metadata_file
                 self.targets[targets_metadata_file] = tomli.load(f)
-
-                self.signed_dict["spec_version"] = OFFLINE_SNAPSHOT_SPEC_VERSION
-                self.signed_dict["_type"] = "snapshot"
-                self.signed_dict["bufsize"] = self.bufsize
 
         self.__generate_metadata()
 

@@ -18,12 +18,28 @@ class TimestampOnline(AutoRole):
 
     def __init__(self, cfg: str) -> None:
         AutoRole.__init__(self, cfg)
+        self.signed_dict["bufsize"] = self.bufsize
+        self.snapshot_metadata_file = None
+        self.snapshot_metadata_file_dict = {}
 
-    def sign_snapshot_metadata(self, snapshot_metadata_file) -> None:
-        '''
-        Sign metadata file received from Snapshot
-        '''
-        self.sign_metadata(snapshot_metadata_file)
+    def timestamponline_reinit(self, snapshot_metadata_file: str, id:str) -> None:
+        self.auto__reinit(False)
+        self.snapshot_metadata_file = snapshot_metadata_file
+
+        with open(snapshot_metadata_file, "rb") as f:
+            self.snapshot_metadata_file_dict = tomli.load(f)
+    
+        self.__generate_metadata()
+        self.signed_dict["vin"] = id
+
+    def __generate_metadata(self):
+        self.signed_dict["snapshot_metadata_file_hash"] = \
+        uptane.crypto.hash.get_file_hash(self.snapshot_metadata_file, \
+        uptane.crypto.hash.HashFunc.sha256, self.bufsize)
+
+        if uptane.time.fut_is_expired(
+                int(self.snapshot_metadata_file_dict["signed"]["expires"])):
+            raise MetadataFileHasExpired
 
 
 class TimestampOffline(ManualRole):
@@ -47,8 +63,9 @@ class TimestampOffline(ManualRole):
             self.snapshot_metadata_file_dict = tomli.load(f)
 
         self.signed_dict["bufsize"] = self.bufsize
+        self.__generate_metadata()
 
-    def __gen_cfg_metadata(self) -> None:
+    def __generate_metadata(self) -> None:
         '''
         Populate the signed dict that will be converted to a toml file
 
