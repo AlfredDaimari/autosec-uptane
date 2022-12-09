@@ -8,7 +8,7 @@ spec_version = "0.0.1"
 version = "0.0.1"
 expires = "" # UTC time, python equivalent is time.time()
 threshold = 1
-bufsize = 64372
+bufsize = 65536
 
 [[signed.keys]]
 keytype = "ed25519"

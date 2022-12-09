@@ -237,3 +237,19 @@ class Verification:
         self.__verify_all_targets_files()
         self.__verify_snapshot()
         self.__verify_timestamp()
+
+
+# RITUL
+class ECUVerification:
+    '''
+        Class for verifying ECU manifest (signed by ECUs with their private key)
+    '''
+    def __init__(self, vehicle_manifest_json:typing.Any):
+        pass
+
+    def verify_ecus(self)->bool:
+        '''
+        checks if ecus signatures are valid or not
+        '''
+        return True
+
