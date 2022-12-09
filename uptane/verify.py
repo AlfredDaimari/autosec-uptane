@@ -273,11 +273,13 @@ class ECUVerification:
 
     
 
-    def __init__(self, vehicle_manifest_json:typing.Any):
+    
         
+
+    def __init__(self, vehicle_manifest_json: typing.Any):
         pass
 
-    def verify_ecus(self)->bool:
+    def verify_ecus(self) -> bool:
         '''
         checks if ecus signatures are valid or not
         '''
@@ -301,4 +303,3 @@ class ECUVerification:
 
 
         return True
-

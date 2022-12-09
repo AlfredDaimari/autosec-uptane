@@ -19,56 +19,91 @@ class AutoRole:
             - Implements common functionality between non-human automatic roles (Snapshot, 
               Timestamp, Targets)
         
-            - Common functions are - revoke_key, get_time_to_expr, generate_signature,
-              replace_online_key, add_online_key, sign_metadata
+            - Common functions are - gen_cfg_metata, gen_signed_metadata_file
+
+            - Meant to be run on server
     '''
 
     def __init__(self, cfg: str) -> None:
         '''
-        Init the Role with a link to a configuration toml file, this will be the starting
-        config
-            
+        Init Manual Role, configures the role
+
             Parameters:
-                cfg (str): path to the configuration file
-            
+                cfg (str): path to the role configuration toml file
+                gen_img_metadata (bool) [Optional, Default: True]: default behaviour, generates 
+                image metadata
+
             Raises:
-                tomli.TomlDecodeError
-                FileNotFoundError
+                FileNotFoundError - when toml file is not found 
+                tomli.TomlDecodeError - when toml has syntax error
+
+            TODO:
+                Come up with our own toml parsing library
         '''
+
         with open(cfg, "rb") as f:
-            self.toml_dict = tomli.load(f)
-            self.online_key = self.toml_dict["key"]
-            self.role = self.toml_dict["role"]
-            # TODO - comeup with cfg file structure
 
-    def get_expr_time(self,
-                      metadata_file: str) -> None:  # return type should be date
+            toml_dict = tomli.load(f)
+            self.cfg_toml_dict = toml_dict
+            self.private_key = toml_dict["private_key"]
+            self.role = toml_dict["role"]
+            self.public_key = toml_dict["public_key"]
+            self.key_type = toml_dict["key_type"]
+
+            self.hash_function = toml_dict["hash"]["function"]
+            self.bufsize = toml_dict["hash"]["bufsize"]
+
+            self.sig_algo = toml_dict["signature"]["algorithm"]
+
+            self.signed_dict: typing.Dict = {}
+            self.signature_dict: typing.Dict = {}
+
+            self.cfg_toml_dict = toml_dict
+
+    def auto__reinit(self, gen_img_metadata):
         '''
-        Returns the expiration time for the current metadata file
+        Setup base metadataclass for new metadata file generation
+        '''
+        self.signed_dict: typing.Dict = {}
+        self.signature_dict: typing.Dict = {}
+        self.__gen_cfg_metadata(gen_img_metadata)
 
-            Parameters:
-                metadata_file (str): name of metadata file
+    def __gen_cfg_metadata(self, gen_img_metadata: bool = True) -> None:
+        '''
+        Generates the cfg metadata for the image metadata file
+        '''
+        self.signature_dict["keyid"] = self.public_key
+        self.signature_dict["sig"] = ""
+        self.signature_dict["key_type"] = self.key_type
 
-            Returns:
-                date object: a future time where time will expire
+        if gen_img_metadata:
+            self.signed_dict["image_hash_func"] = self.hash_function
+            self.signed_dict["image_buf_size"] = self.bufsize
+            self.signed_dict["image_sig_algo"] = self.sig_algo
+
+    def gen_signed_metadata_file(self, metadata_file: str) -> None:
+        '''
+        Generates the signed toml metadata file using self.signed_dict, self.signature_dict
+        Generates the signature using self.signed_dict and populates self.signature_dict
+        
+            Paramters:
+                meta_file (str): name of the file to push to, creates new one if it does
+                not exist
 
             Raises:
-                MetadataSignatureExpired: when signature of a metadata file has already
-                expired
+                tomli.TomlDecodeError - when toml has syntax error
         '''
-        pass
+        self.signed_dict["expires"] = f'{uptane.time.get_fut24_epoch_time()}'
+        self.signature_dict["sig"] = uptane.crypto.sign.sign_metadata(self.signed_dict, \
+        uptane.crypto.hash.HashFunc.sha256, uptane.crypto.sign.KeyType.ed25519, \
+        self.private_key)
 
-    def generate_metadata_file(self) -> None:
-        pass
-
-    def replace_online_key(self, new_key: str, key_id_to_replace: str) -> None:
-        pass
-
-    def add_online_key(self, new_key: str) -> None:
-        pass
-
-    def sign_metadata(self, metadata_file) -> None:
-        pass
+        with open(metadata_file, "wb") as f:
+            tomli_w.dump(
+                {
+                    "signature": self.signature_dict,
+                    "signed": self.signed_dict
+                }, f)
 
 
 class ManualRole:
@@ -145,7 +180,7 @@ class ManualRole:
             Raises:
                 tomli.TomlDecodeError - when toml has syntax error
         '''
-        self.signed_dict["expires"] = f'{uptane.time.get_fut24_epoch_time()}'
+        self.signed_dict["expires"] = f'{uptane.time.get_fut365y_epoch_time()}'
         self.signature_dict["sig"] = uptane.crypto.sign.sign_metadata(self.signed_dict, \
         uptane.crypto.hash.HashFunc.sha256, uptane.crypto.sign.KeyType.ed25519, \
         self.private_key)
@@ -193,3 +228,56 @@ class TarSnapManualRole(ManualRole):
 
     def __get_file_size(self) -> int:
         return os.path.getsize(self.local_image_path)
+
+
+class TarSnapAutoRole(AutoRole):
+    '''
+    Implements the common functionality between both such as:
+        - generate image file hashes
+        - generate metadata file signature
+    '''
+
+    def __init__(self, cfg) -> None:
+        '''
+        Inits the common metadata between Targets and Snapshot
+        Common Metadata:
+            - image_name
+            - image_url
+            - image_version
+            - image_size 
+            - image_hash 
+        '''
+        AutoRole.__init__(self, cfg)
+        self.image_cfg_toml_dict: typing.Dict[str, typing.Any] = {}
+
+    def tarsnapauto_reinit(self, image_cfg: typing.Any):
+
+        if image_cfg is not None:
+
+            self.auto__reinit(True)
+            self.signed_dict["image_name"] = image_cfg["image_name"]
+            self.signed_dict["image_url"] = image_cfg["image_url"]
+            self.signed_dict["image_version"] = image_cfg["image_version"]
+            self.signed_dict["image_size"] = image_cfg["image_size"]
+            self.signed_dict["image_hash"] = image_cfg["image_hash"]
+            self.image_cfg_toml_dict = image_cfg
+
+        else:
+
+            self.auto__reinit(False)
+            self.image_cfg_toml_dict = {}
+
+            if self.signed_dict.get('image_name'):
+                del self.signed_dict['image_name']
+
+            if self.signed_dict.get('image_url'):
+                del self.signed_dict['image_url']
+
+            if self.signed_dict.get('image_version'):
+                del self.signed_dict['image_version']
+
+            if self.signed_dict.get('image_size'):
+                del self.signed_dict['image_size']
+
+            if self.signed_dict.get('image_hash'):
+                del self.signed_dict['image_hash']
