@@ -6,6 +6,7 @@ import uptane.error.general
 import uptane.crypto.hash
 import uptane.crypto.sign
 import typing
+import json
 
 
 class Verification:
@@ -243,13 +244,61 @@ class Verification:
 class ECUVerification:
     '''
         Class for verifying ECU manifest (signed by ECUs with their private key)
+        vvm = {
+            ecu1: {
+            signed: { image_hash: "hash"},
+            ecu_name: "",
+            signature: "dafkljlj"
+            },
+            ecu2: {
+            signed: {image_hash: "hash"},
+            signature: "dafkljlj"
+            }
+            vin: "id-number"
+        }
     '''
+    # vvm = {
+    # 'ecu1:' {
+    #     'signed': { image_hash: "hash"},
+    #     'ecu_name': "",
+    #     'signature': "dafkljlj"
+    # },
+    # 'ecu2': {
+    #     'signed': {"image_hash": "hash"},
+    #     'ecu_name': "",
+    #     'signature': "dafkljlj"
+    # }
+    # 'vin': "id-number"
+    # }
+
+    
+
     def __init__(self, vehicle_manifest_json:typing.Any):
+        
         pass
 
     def verify_ecus(self)->bool:
         '''
         checks if ecus signatures are valid or not
         '''
+        # get ecu_keys file
+        ecu_keys = json.load(open('ecu_keys.json'))
+        
+        for i in vvm:
+            if i != "vin":
+                sym_key = ecu_keys[i][sym_key]
+                
+                # run verification using sym_key over vvm[i]["signature"]
+
+
+                if ver == True:
+                    return True
+                else:
+                    print("Manifest signature verification failed")
+
+
+                
+
+
         return True
 
