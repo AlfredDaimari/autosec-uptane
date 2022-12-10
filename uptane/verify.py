@@ -1,12 +1,15 @@
 from argparse import BooleanOptionalAction
 import os
-import tomli
+import toml
 import uptane.time
 import uptane.error.general
 import uptane.crypto.hash
 import uptane.crypto.sign
 import typing
 import json
+from Crypto.Cipher import AES
+from Crypto.Cipher._mode_eax import EaxMode
+from typing import Any
 
 
 class Verification:
@@ -248,33 +251,24 @@ class ECUVerification:
             ecu1: {
             signed: { image_hash: "hash"},
             ecu_name: "",
-            signature: "dafkljlj"
+            signature: "dafkljlj",
+            nonce: nonce,
+            tag: tag,
+            cipher_text: cipher_text
             },
             ecu2: {
             signed: {image_hash: "hash"},
             signature: "dafkljlj"
+            nonce: nonce,
+            tag: tag,
+            cipher_text: cipher_text
             }
             vin: "id-number"
         }
     '''
-    # vvm = {
-    # 'ecu1:' {
-    #     'signed': { image_hash: "hash"},
-    #     'ecu_name': "",
-    #     'signature': "dafkljlj"
-    # },
-    # 'ecu2': {
-    #     'signed': {"image_hash": "hash"},
-    #     'ecu_name': "",
-    #     'signature': "dafkljlj"
-    # }
-    # 'vin': "id-number"
-    # }
+ 
 
     
-
-    
-        
 
     def __init__(self, vehicle_manifest_json: typing.Any):
         pass
@@ -286,15 +280,21 @@ class ECUVerification:
         # get ecu_keys file
         ecu_keys = json.load(open('ecu_keys.json'))
         
+        # vvm(dictionary format) received from Primary ECU
+
         for i in vvm:
             if i != "vin":
                 sym_key = ecu_keys[i][sym_key]
-                
+
                 # run verification using sym_key over vvm[i]["signature"]
+                cipher: Any = AES.new(sym_key, AES.MODE_EAX, nonce=vvm[i]["nonce"])
 
+                if isinstance(cipher, EaxMode):
+                    try:
+                        cipher.decrypt_and_verify(vvm[i]["cipher_text"], received_mac_tag= vvm[i]["tag"])
+                    except:
+                        print("MAC does not match. The message has been tampered with or the key is incorrect.")
 
-                if ver == True:
-                    return True
                 else:
                     print("Manifest signature verification failed")
 
