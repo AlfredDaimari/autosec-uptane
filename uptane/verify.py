@@ -1,6 +1,5 @@
-from argparse import BooleanOptionalAction
 import os
-import toml
+import tomli
 import uptane.time
 import uptane.error.general
 import uptane.crypto.hash
@@ -251,14 +250,12 @@ class ECUVerification:
             ecu1: {
             signed: { image_hash: "hash"},
             ecu_name: "",
-            signature: "dafkljlj",
             nonce: nonce,
             tag: tag,
             cipher_text: cipher_text
             },
             ecu2: {
             signed: {image_hash: "hash"},
-            signature: "dafkljlj"
             nonce: nonce,
             tag: tag,
             cipher_text: cipher_text
