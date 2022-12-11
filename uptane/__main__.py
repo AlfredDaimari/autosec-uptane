@@ -9,6 +9,7 @@ import uptane.repository.inventorydb
 import uptane.repository.directordb
 import uptane.verify
 
+
 def exec_offline_metadata_gen(args: typing.Dict[str, typing.Any]):
     '''
     Execute offline metadata program

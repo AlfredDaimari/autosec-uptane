@@ -263,9 +263,6 @@ class ECUVerification:
             vin: "id-number"
         }
     '''
- 
-
-    
 
     def __init__(self, vehicle_manifest_json: typing.Any):
         pass
@@ -276,7 +273,7 @@ class ECUVerification:
         '''
         # get ecu_keys file
         ecu_keys = json.load(open('ecu_keys.json'))
-        
+
         # vvm(dictionary format) received from Primary ECU
 
         for i in vvm:
@@ -284,19 +281,21 @@ class ECUVerification:
                 sym_key = ecu_keys[i][sym_key]
 
                 # run verification using sym_key over vvm[i]["signature"]
-                cipher: Any = AES.new(sym_key, AES.MODE_EAX, nonce=vvm[i]["nonce"])
+                cipher: Any = AES.new(sym_key,
+                                      AES.MODE_EAX,
+                                      nonce=vvm[i]["nonce"])
 
                 if isinstance(cipher, EaxMode):
                     try:
-                        cipher.decrypt_and_verify(vvm[i]["cipher_text"], received_mac_tag= vvm[i]["tag"])
+                        cipher.decrypt_and_verify(
+                            vvm[i]["cipher_text"],
+                            received_mac_tag=vvm[i]["tag"])
                     except:
-                        print("MAC does not match. The message has been tampered with or the key is incorrect.")
+                        print(
+                            "MAC does not match. The message has been tampered with or the key is incorrect."
+                        )
 
                 else:
                     print("Manifest signature verification failed")
-
-
-                
-
 
         return True

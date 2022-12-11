@@ -108,8 +108,9 @@ def manifest():
         TIMESTAMP.gen_signed_metadata_file(tms_metadata_file_name)
 
         # create the zip file
-        shutil.make_archive(f'temp_met_dir/{temp_dir}-zip', 'zip', f'temp_met_dir/{temp_dir}')
-        
+        shutil.make_archive(f'temp_met_dir/{temp_dir}-zip', 'zip',
+                            f'temp_met_dir/{temp_dir}')
+
         # send the file
         flask.send_from_directory('temp_met_dir', f'{temp_dir}-zip.zip')
 

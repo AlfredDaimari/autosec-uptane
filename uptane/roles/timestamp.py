@@ -22,13 +22,14 @@ class TimestampOnline(AutoRole):
         self.snapshot_metadata_file = None
         self.snapshot_metadata_file_dict = {}
 
-    def timestamponline_reinit(self, snapshot_metadata_file: str, id:str) -> None:
+    def timestamponline_reinit(self, snapshot_metadata_file: str,
+                               id: str) -> None:
         self.auto__reinit(False)
         self.snapshot_metadata_file = snapshot_metadata_file
 
         with open(snapshot_metadata_file, "rb") as f:
             self.snapshot_metadata_file_dict = tomli.load(f)
-    
+
         self.__generate_metadata()
         self.signed_dict["vin"] = id
 
