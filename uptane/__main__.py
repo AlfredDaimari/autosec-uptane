@@ -5,7 +5,7 @@ import uptane.roles.root
 import uptane.roles.targets
 import uptane.roles.snapshot
 import uptane.roles.timestamp
-#import uptane.repository.inventorydb
+import uptane.repository.inventorydb
 #import uptane.repository.directordb
 import uptane.verify
 
@@ -60,7 +60,17 @@ def exec_server_gen(args: typing.Dict[str, typing.Any]):
     '''
     Execute server generating program
     '''
-    pass
+    if args["stype"] is None:
+        print("--stype argument is not given")
+        exit(1)
+
+    if args["rmetafile"] is None:
+        print("--rmetafile argument is not given")
+        exit(1)
+   
+    if args["stype"] == "inventory":
+        uptane.repository.inventorydb.setup_server(args["rmetafile"])    
+
 
 
 def exec_verify_metadata(args: typing.Dict[str, typing.Any]):
@@ -118,14 +128,17 @@ def main():
         "--tmetafile",
         action="append",
         help="names of all target metadata file wanted in snapshot")
-
     parser.add_argument(
         "--tmetadir",
         help="dir of targets metadata, images [choice for verify]")
     parser.add_argument("-s", "--smetafile", help="the snapshot metadata file")
     parser.add_argument("--tsmetafile", help="the timestamp metadata file")
     parser.add_argument("-r", "--rmetafile", help="the root metadata file")
+    
     parser.add_argument("--name", help="name of the metadata file to output to")
+    
+    parser.add_argument("--stype", help="the type of server", choices=["inventory","director"])
+
     parser.add_argument(
         "command",
         help=

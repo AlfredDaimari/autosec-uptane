@@ -1,6 +1,6 @@
 .venv
 **/__pycache__
 test_metadata*
-temp
+temp*
 test_targets_dir
 *public*
