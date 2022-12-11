@@ -78,7 +78,7 @@ class Verification:
                 uptane.error.general.MetadataFileInvalidSignature
         '''
 
-        if uptane.time.fut_is_expired(self.root_signed["expires"]):
+        if uptane.time.fut_is_expired(int(self.root_signed["expires"])):
             raise uptane.error.general.MetadataFileHasExpired
 
         if not uptane.crypto.sign.verify_sig_metadata(self.root_signed, \
@@ -110,7 +110,7 @@ class Verification:
 
         for targets_metadata_file in targets_metadata_files:
 
-            with open(targets_metadata_file, 'rb') as f:
+            with open(f'{self.targets_files_dir_path}/'+targets_metadata_file, 'rb') as f:
                 toml_dict = tomli.load(f)
                 cur_sig = toml_dict["signature"]["sig"]
                 cur_public_key = toml_dict['signature']['keyid']
@@ -122,7 +122,7 @@ class Verification:
             if self.targets_pub_key != cur_public_key:
                 raise uptane.error.general.PublicKeysNoMatch
 
-            if uptane.time.fut_is_expired(toml_dict["signed"]["expires"]):
+            if uptane.time.fut_is_expired(int(toml_dict["signed"]["expires"])):
                 raise uptane.error.general.MetadataFileHasExpired
 
             if not uptane.crypto.sign.verify_sig_metadata(cur_signed, \
@@ -159,7 +159,7 @@ class Verification:
         if self.snapshot_pub_key != cur_public_key:
             raise uptane.error.general.PublicKeysNoMatch
 
-        if uptane.time.fut_is_expired(toml_dict["signed"]["expires"]):
+        if uptane.time.fut_is_expired(int(toml_dict["signed"]["expires"])):
             raise uptane.error.general.MetadataFileHasExpired
 
         if not uptane.crypto.sign.verify_sig_metadata(cur_signed, \
@@ -204,12 +204,12 @@ class Verification:
                 "snapshot_metadata_file_hash"]
 
             cur_signed = toml_dict['signed']
-            bufsize = int(toml_dict["signed"]["image_buf_size"])
+            bufsize = int(toml_dict["signed"]["bufsize"])
 
         if self.timestamp_pub_key != cur_public_key:
             raise uptane.error.general.PublicKeysNoMatch
 
-        if uptane.time.fut_is_expired(toml_dict["signed"]["expires"]):
+        if uptane.time.fut_is_expired(int(toml_dict["signed"]["expires"])):
             raise uptane.error.general.MetadataFileHasExpired
 
         if not uptane.crypto.sign.verify_sig_metadata(cur_signed, \

@@ -5,8 +5,8 @@ import uptane.roles.root
 import uptane.roles.targets
 import uptane.roles.snapshot
 import uptane.roles.timestamp
-import uptane.repository.inventorydb
-import uptane.repository.directordb
+#import uptane.repository.inventorydb
+#import uptane.repository.directordb
 import uptane.verify
 
 
@@ -84,7 +84,7 @@ def exec_verify_metadata(args: typing.Dict[str, typing.Any]):
         exit(1)
 
     vef = uptane.verify.Verification(root_metadata_file_path=args["rmetafile"], \
-        targets_files_dir_path=args["tmetadir"], snapshot_metadata_file_path=args["snapshot_metadata_file_path"], \
+        targets_files_dir_path=args["tmetadir"], snapshot_metadata_file_path=args["smetafile"], \
         timestamp_metadata_file_path=args["tsmetafile"])
     vef.verify()
 

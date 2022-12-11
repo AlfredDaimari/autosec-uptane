@@ -1,4 +1,5 @@
 # snapshot role
+import os
 import uptane.crypto.hash
 import uptane.time
 from uptane.roles.role import TarSnapAutoRole, TarSnapManualRole
@@ -97,9 +98,10 @@ class SnapshotOffline(TarSnapManualRole):
         using anyother func will ultimately make it fail
         '''
         for targets_metadata_file in self.targets_metadata_files:
+            targets_key = os.path.basename('./'+targets_metadata_file).split('/')[-1]
 
-            self.signed_dict["targets"][targets_metadata_file] = {}
-            self.signed_dict["targets"][targets_metadata_file]["hash"] = \
+            self.signed_dict["targets"][targets_key] = {}
+            self.signed_dict["targets"][targets_key]["hash"] = \
             uptane.crypto.hash.get_file_hash(targets_metadata_file, \
             uptane.crypto.hash.HashFunc.sha256, self.bufsize)
 
