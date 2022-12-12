@@ -12,6 +12,7 @@ from Crypto.PublicKey import ECC
 class KeyType(Enum):
     ed25519 = 1
 
+
 def __sort_metadata_list(metadata: list) -> list:
     for i in range(len(metadata)):
         if type(metadata[i]) == type([]):
@@ -19,20 +20,20 @@ def __sort_metadata_list(metadata: list) -> list:
 
         if type(metadata[i]) == type({}):
             metadata[i] = __sort_metadata(metadata[i])
-    
+
     return metadata
-            
+
 
 def __sort_metadata(metadata: Dict[str, Any]) -> Dict[str, Any]:
     sorted_metadata = dict(sorted(metadata.items()))
-    
+
     for key in sorted_metadata:
         if type(sorted_metadata[key]) == type({}):
             sorted_metadata[key] = __sort_metadata(sorted_metadata[key])
 
         if type(sorted_metadata[key]) == type([]):
             sorted_metadata[key] = __sort_metadata_list(sorted_metadata[key])
-    
+
     return sorted_metadata
 
 
@@ -58,7 +59,7 @@ def sign_metadata(metadata: Dict[str, Any], hashf: HashFunc, ktype: KeyType,
         s256 = hashlib.sha256()
         s256.update(bytes(json_payload, 'utf-8'))
         hashed_payload = s256.hexdigest()
-       
+
     if hashf == HashFunc.md5:
         hmd5 = hashlib.md5()
         hmd5.update(bytes(json_payload, 'utf-8'))
@@ -87,13 +88,13 @@ def verify_sig_metadata(metadata: Dict[str, Any], hashf: HashFunc,
     '''
     metadata = __sort_metadata(metadata)
     json_payload = json.dumps(metadata)
-   
+
     hashed_payload: str = ''
     if hashf == HashFunc.sha256:
         s256 = hashlib.sha256()
         s256.update(bytes(json_payload, 'utf-8'))
         hashed_payload = s256.hexdigest()
-        
+
     if hashf == HashFunc.md5:
         hmd5 = hashlib.md5()
         hmd5.update(bytes(json_payload, 'utf-8'))

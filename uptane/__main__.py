@@ -6,9 +6,57 @@ import uptane.roles.targets
 import uptane.roles.snapshot
 import uptane.roles.timestamp
 import uptane.repository.imagerepo
-#import uptane.repository.directordb
-import uptane.verify
+import uptane.repository.directorrepo
+import uptane.verify 
+import uptane.crypto.sign
+import uptane.crypto.hash
+import subprocess
+import json
+import typing
 
+def exec_send_to_image_repo(args)->None:
+    '''
+    Send to image repo using curl
+        Parameters:
+            auth_pem_key: private key for basic authenticaion 
+            zip_file_path: zip file to send to the uptane image repo
+    '''
+    if args["authpubkey"] is None:
+        print("--authpubkey not given")
+        exit(1)
+    
+    with open(args["authpubkey"]) as f:
+        auth_pub_key = f.read()
+
+    if args["zipfpath"] is None:
+        print("--zipfpath not given")
+        exit(1)
+    zip_file_path = args["zipfpath"]
+
+    if args["authpemkey"] is None:
+        print("--authpemkey not given")
+        exit(1)
+    with open(args["authpemkey"], "r") as f:
+        auth_pem_key = f.read()
+
+    if args["url"] is None:
+        print("--url is not given")
+        exit(1)
+    url = args["url"]
+
+    bufsize = 65536 # 8kb
+    zip_file_hash = uptane.crypto.hash.get_file_hash(file_path=zip_file_path, \
+                    hashf=uptane.crypto.hash.HashFunc.sha256, bufsize=bufsize)
+    signed_dict:typing.Dict[str,str | int] = {"bufsize":bufsize, "hash":zip_file_hash}
+    signature = uptane.crypto.sign.sign_metadata(signed_dict,\
+                hashf=uptane.crypto.hash.HashFunc.sha256, ktype=uptane.crypto.sign.KeyType.ed25519,\
+                key=auth_pem_key)
+    auth_json = json.dumps({"signed":signed_dict, "keyid":auth_pub_key, "signature":signature})
+    process = subprocess.Popen(['curl', '-X', 'POST', "-F", "file=@{}".format(zip_file_path), \
+                "-F", "auth_json={}".format(json.dumps(auth_json)), url],stdout=subprocess.PIPE, \
+                stderr=subprocess.PIPE)
+    stdout, _ = process.communicate()
+    print(stdout)
 
 def exec_offline_metadata_gen(args: typing.Dict[str, typing.Any]):
     '''
@@ -67,10 +115,25 @@ def exec_server_gen(args: typing.Dict[str, typing.Any]):
     if args["rmetafile"] is None:
         print("--rmetafile argument is not given")
         exit(1)
-   
-    if args["stype"] == "inventory":
-        uptane.repository.imagerepo.setup_server(args["rmetafile"])    
 
+    if args["authpubkey"] is None:
+        print("--authpubkey argument is not given")
+        exit(1)
+
+    # getting public key
+    authpubkey = open(args["authpubkey"], "r").read()
+    if args["stype"] == "image":
+        uptane.repository.imagerepo.setup_server(args["rmetafile"], authpubkey)
+
+    if args["stype"] == "director":
+        if (args["ontscfg"] is None) or (args["onsnapcfg"] is
+                                         None) or (args["ontarcfg"] is None):
+            print("--ontscfg --onsnapcfg --ontarcfg arguments not given")
+            exit(1)
+
+        uptane.repository.directorrepo.setup_server(root_metadata_file=args["rmetafile"], \
+                timestamp_cfg=args["ontscfg"], snapshot_cfg=args["onsnapcfg"], \
+                targets_cfg=args["ontarcfg"], authpubkey=authpubkey)
 
 
 def exec_verify_metadata(args: typing.Dict[str, typing.Any]):
@@ -100,7 +163,7 @@ def exec_verify_metadata(args: typing.Dict[str, typing.Any]):
 
 
 def main():
-    print("autosec_uptane version 0.0.1")
+    print("autosec_uptane version 0.0.2")
 
     # argument parser for generating metadata
     parser = argparse.ArgumentParser(
@@ -128,22 +191,38 @@ def main():
         "--tmetafile",
         action="append",
         help="names of all target metadata file wanted in snapshot")
+
+    # verification arguments
     parser.add_argument(
         "--tmetadir",
         help="dir of targets metadata, images [choice for verify]")
     parser.add_argument("-s", "--smetafile", help="the snapshot metadata file")
     parser.add_argument("--tsmetafile", help="the timestamp metadata file")
     parser.add_argument("-r", "--rmetafile", help="the root metadata file")
-    
+
     parser.add_argument("--name", help="name of the metadata file to output to")
-    
-    parser.add_argument("--stype", help="the type of server", choices=["inventory","director"])
+
+    # server arguments
+    parser.add_argument("--stype",
+                        help="the type of server",
+                        choices=["image", "director"])
+    parser.add_argument("--authpubkey",
+                        help="authentication key to be used for server")
+    parser.add_argument("--ontscfg", help="online cfg for timestamp role")
+    parser.add_argument("--onsnapcfg", help="online cfg for snapshot role")
+    parser.add_argument("--ontarcfg", help="online cfg for targets role")
 
     parser.add_argument(
         "command",
         help=
-        "metadata - command for generating metadata, server - command for generating a server, verify - command for verifying metadata"
+        "metadata - command for generating metadata, server - command for generating a server, verify - command for verifying metadata, send - command for sending to server"
     )
+
+    # send arguments
+    parser.add_argument('--url', help='url for sending the file to')
+    parser.add_argument('--authpemkey', help='private key for authenticating with server')
+    parser.add_argument('--zipfpath', help='path of the zip file to send')
+    # 4th argument for send is --authpubkey, defined in server arguments as well
 
     # parsing args
     args = parser.parse_args()
@@ -158,6 +237,8 @@ def main():
         exec_server_gen(args)
     elif args["command"] == "verify":
         exec_verify_metadata(args)
+    elif args["command"] == "send":
+        exec_send_to_image_repo(args)
     else:
         print(f'{args["command"]} not recognized')
 

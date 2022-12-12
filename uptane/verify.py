@@ -110,7 +110,8 @@ class Verification:
 
         for targets_metadata_file in targets_metadata_files:
 
-            with open(f'{self.targets_files_dir_path}/'+targets_metadata_file, 'rb') as f:
+            with open(f'{self.targets_files_dir_path}/' + targets_metadata_file,
+                      'rb') as f:
                 toml_dict = tomli.load(f)
                 cur_sig = toml_dict["signature"]["sig"]
                 cur_public_key = toml_dict['signature']['keyid']

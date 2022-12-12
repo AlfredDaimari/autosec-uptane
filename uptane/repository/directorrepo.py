@@ -44,9 +44,10 @@ if not os.path.exists('./temp_met_dir'):
     os.mkdir('./temp_met_dir')
 
 # setting up the various roles
-TARGETS = uptane.roles.targets.TargetsOnline('online_targets.cfg')
-SNAPSHOT = uptane.roles.snapshot.SnapshotOnline('online_snapshot.cfg')
-TIMESTAMP = uptane.roles.timestamp.TimestampOnline('online_timestamp.cfg')
+TARGETS: uptane.roles.targets.TargetsOnline
+SNAPSHOT: uptane.roles.snapshot.SnapshotOnline
+TIMESTAMP: uptane.roles.timestamp.TimestampOnline
+AUTH_PUB_ED25519_KEY: str
 
 # the car should send a json in the format
 # {
@@ -116,3 +117,19 @@ def manifest():
 
     except Exception as e:
         return json.dumps({"error": {"type": str(e)}})
+
+
+def setup_server(root_metadata_file: str, timestamp_cfg: str, snapshot_cfg: str,
+                 targets_cfg: str, authpubkey: str):
+    global TARGETS, SNAPSHOT, TIMESTAMP, AUTH_PUB_ED25519_KEY
+
+    # make python open up a specific directory in the filesystem
+    # the temporary repo will be used to generate metadata files
+    if not os.path.exists('./temp_met_dir'):
+        os.mkdir('./temp_met_dir')
+
+    # setting up the various roles
+    TARGETS = uptane.roles.targets.TargetsOnline(targets_cfg)
+    SNAPSHOT = uptane.roles.snapshot.SnapshotOnline(snapshot_cfg)
+    TIMESTAMP = uptane.roles.timestamp.TimestampOnline(timestamp_cfg)
+    AUTH_PUB_ED25519_KEY = authpubkey

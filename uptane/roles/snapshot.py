@@ -98,7 +98,8 @@ class SnapshotOffline(TarSnapManualRole):
         using anyother func will ultimately make it fail
         '''
         for targets_metadata_file in self.targets_metadata_files:
-            targets_key = os.path.basename('./'+targets_metadata_file).split('/')[-1]
+            targets_key = os.path.basename('./' +
+                                           targets_metadata_file).split('/')[-1]
 
             self.signed_dict["targets"][targets_key] = {}
             self.signed_dict["targets"][targets_key]["hash"] = \
