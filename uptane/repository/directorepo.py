@@ -9,8 +9,8 @@ import typing
 import uuid
 import shutil
 
-directordb = flask.Flask(__name__)
-directordb.config["MANIFEST_JSON"] = "manifest.json"
+directorrepo = flask.Flask(__name__)
+directorrepo.config["MANIFEST_JSON"] = "manifest.json"
 # read json file -> dict
 
 
@@ -64,7 +64,7 @@ TIMESTAMP = uptane.roles.timestamp.TimestampOnline('online_timestamp.cfg')
 
 
 # -- this is an ad-hoc implementation [need to change it]
-@directordb.route('/manifest/', methods=["POST"])
+@directorrepo.route('/manifest/', methods=["POST"])
 def manifest():
     try:
         request_json = flask.request.json

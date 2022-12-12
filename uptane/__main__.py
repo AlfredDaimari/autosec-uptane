@@ -5,7 +5,7 @@ import uptane.roles.root
 import uptane.roles.targets
 import uptane.roles.snapshot
 import uptane.roles.timestamp
-import uptane.repository.inventorydb
+import uptane.repository.imagerepo
 #import uptane.repository.directordb
 import uptane.verify
 
@@ -69,7 +69,7 @@ def exec_server_gen(args: typing.Dict[str, typing.Any]):
         exit(1)
    
     if args["stype"] == "inventory":
-        uptane.repository.inventorydb.setup_server(args["rmetafile"])    
+        uptane.repository.imagerepo.setup_server(args["rmetafile"])    
 
 
 

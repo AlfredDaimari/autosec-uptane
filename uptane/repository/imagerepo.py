@@ -4,8 +4,8 @@ import json
 import zipfile
 import uptane.verify
 
-inventorydb = flask.Flask(__name__)
-inventorydb.config["UPLOAD_FOLDER"] = "public_repo"
+imagerepo = flask.Flask(__name__)
+imagerepo.config["UPLOAD_FOLDER"] = "public_repo"
 
 ROOT_METADATA_FILE_PATH:str
 
@@ -57,7 +57,7 @@ def remove_timestamp_file_from_repo(reponame:str)->None:
         pass
 
 # setting up different routes
-@inventorydb.route('/repo/<reponame>/<filename>/', methods=["GET", "POST"])
+@imagerepo.route('/repo/<reponame>/<filename>/', methods=["GET", "POST"])
 def repo(reponame:str, filename:str):
     global ROOT_METADATA_FILE_PATH
     try:
@@ -70,7 +70,7 @@ def repo(reponame:str, filename:str):
                 return '{"error":{"type":"file_not_found"}}'
             else:
                 return flask.send_from_directory(
-                    inventorydb.config["UPLOAD_FOLDER"],
+                    imagerepo.config["UPLOAD_FOLDER"],
                     '{}/{}'.format(reponame, filename))
         else:
             file = flask.request.files["file"]
@@ -113,13 +113,13 @@ def repo(reponame:str, filename:str):
 
 
 def setup_server(root_metadata_file_path):
-    global inventorydb
+    global imagerepo
     global ROOT_METADATA_FILE_PATH
     # make python open up a specific directory in the filesystem
     if not os.path.exists('./public_repo'):
         os.mkdir("./public_repo")
    
     ROOT_METADATA_FILE_PATH = root_metadata_file_path
-    inventorydb.run(port=8080, debug=True)
+    imagerepo.run(port=8080, debug=True)
 
 
