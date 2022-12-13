@@ -44,10 +44,14 @@ def exec_send_to_image_repo(args)->None:
         exit(1)
     url = args["url"]
 
+    if args["repo"] is None:
+        print("--repo is not given")
+        exit(1)
+
     bufsize = 65536 # 8kb
     zip_file_hash = uptane.crypto.hash.get_file_hash(file_path=zip_file_path, \
                     hashf=uptane.crypto.hash.HashFunc.sha256, bufsize=bufsize)
-    signed_dict:typing.Dict[str,str | int] = {"bufsize":bufsize, "hash":zip_file_hash}
+    signed_dict:typing.Dict[str,str | int] = {"bufsize":bufsize, "hash":zip_file_hash, "repo":args["repo"]}
     signature = uptane.crypto.sign.sign_metadata(signed_dict,\
                 hashf=uptane.crypto.hash.HashFunc.sha256, ktype=uptane.crypto.sign.KeyType.ed25519,\
                 key=auth_pem_key)
@@ -222,8 +226,9 @@ def main():
     parser.add_argument('--url', help='url for sending the file to')
     parser.add_argument('--authpemkey', help='private key for authenticating with server')
     parser.add_argument('--zipfpath', help='path of the zip file to send')
-    # 4th argument for send is --authpubkey, defined in server arguments as well
-
+    parser.add_argument('--repo', help="name of the repo to send to")
+    # 5th argument for send is --authpubkey, defined in server arguments as well
+    
     # parsing args
     args = parser.parse_args()
     args = vars(args)
