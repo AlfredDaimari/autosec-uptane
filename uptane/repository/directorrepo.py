@@ -12,7 +12,10 @@ import shutil
 directorrepo = flask.Flask(__name__)
 directorrepo.config["MANIFEST_JSON"] = "manifest.json"
 # read json file -> dict
+MANIFEST_DICT:typing.Dict[str, typing.Any]
 
+with open(directorrepo.config["MANIFEST_JSON"], "r") as f:
+        MANIFEST_DICT = json.loads(f.read())
 
 def get_update_manifest(manifest: typing.Any) -> bool:
     '''
@@ -22,7 +25,7 @@ def get_update_manifest(manifest: typing.Any) -> bool:
     '''
     # manifest return structure
     #   {
-    #       ecu1:{
+    #       ecu1-image-hash:{
     #       image_name:
     #       image_url: http://ip:port/repo/reponame/image
     #       image_size:
@@ -32,16 +35,15 @@ def get_update_manifest(manifest: typing.Any) -> bool:
     #       image_sig_algo:
     #       image_version:
     #       },
-    #       ecu2:{}
+    #       ecu2-image-hash:{}
     #
     #   }
-    return False
+    for ecu_hash in manifest:
+        if not MANIFEST_DICT.get(ecu_hash, False):
+            return False
+        manifest[ecu_hash] = MANIFEST_DICT[ecu_hash]
 
-
-# make python open up a specific directory in the filesystem
-# the temporary repo will be used to generate metadata files
-if not os.path.exists('./temp_met_dir'):
-    os.mkdir('./temp_met_dir')
+    return True
 
 # setting up the various roles
 TARGETS: uptane.roles.targets.TargetsOnline
@@ -69,51 +71,51 @@ AUTH_PUB_ED25519_KEY: str
 def manifest():
     try:
         request_json = flask.request.json
-        manifest_json_dict = json.load(request_json)
-        vin = manifest_json_dict["vin"]
-        verifier = uptane.verify.ECUVerification(manifest_json_dict)
+        vehicle_manifest_json_dict = json.load(request_json)
+        vin = vehicle_manifest_json_dict["vin"]
+        verifier = uptane.verify.ECUVerification(vehicle_manifest_json_dict)
         verifier.verify_ecus()
 
-        if not get_update_manifest(manifest_json_dict):
+        if not get_update_manifest(vehicle_manifest_json_dict):
             raise Exception("up-to-date")
 
         # make a temporary directory to put all the metadata files
         temp_dir = str(uuid.uuid4())
 
-        if not os.path.exists(f'./temp_met_dir/{temp_dir}'):
-            os.mkdir(f'./temp_met_dir/{temp_dir}')
+        if not os.path.exists(f'director_met_repo/{temp_dir}'):
+            os.mkdir(f'director_met_repo/{temp_dir}')
         else:
-            os.rmdir(f'./temp_met_dir/{temp_dir}')
-            os.mkdir(f'./temp_met_dir/{temp_dir}')
+            os.rmdir(f'director_met_repo/{temp_dir}')
+            os.mkdir(f'director_met_repo/{temp_dir}')
 
         # creating the metadata
 
         #TARGETS
         target_files = []
-        for key in manifest_json_dict:
-            TARGETS.targetsoneline_reinit(manifest_json_dict[key])
-            imn = manifest_json_dict[key]["image_name"]
-            imv = manifest_json_dict[key]["image_version"]
-            metadata_file_name = f'temp_met_dir/{temp_dir}/{imv}.{imn}.targets.toml'
+        for key in vehicle_manifest_json_dict:
+            TARGETS.targetsoneline_reinit(vehicle_manifest_json_dict[key])
+            imn = vehicle_manifest_json_dict[key]["image_name"]
+            imv = vehicle_manifest_json_dict[key]["image_version"]
+            metadata_file_name = f'director_met_repo/{temp_dir}/{imv}.{imn}.targets.toml'
             TARGETS.gen_signed_metadata_file(metadata_file_name)
             target_files.append(metadata_file_name)
 
         # SNAPSHOT
         SNAPSHOT.snapshotonline_reinit(target_files)
-        snp_metadata_file_name = f'temp_met_dir/{temp_dir}/0-0-1.{vin}.snapshot.toml'
+        snp_metadata_file_name = f'director_met_repo/{temp_dir}/0-0-1.{vin}.snapshot.toml'
         SNAPSHOT.gen_signed_metadata_file(snp_metadata_file_name)
 
         # TIMESTAMP
         TIMESTAMP.timestamponline_reinit(snp_metadata_file_name, vin)
-        tms_metadata_file_name = f'temp_met_dir/{temp_dir}/0-0-1.{vin}.timestamp.toml'
+        tms_metadata_file_name = f'director_met_repo/{temp_dir}/0-0-1.{vin}.timestamp.toml'
         TIMESTAMP.gen_signed_metadata_file(tms_metadata_file_name)
 
         # create the zip file
-        shutil.make_archive(f'temp_met_dir/{temp_dir}-zip', 'zip',
-                            f'temp_met_dir/{temp_dir}')
+        shutil.make_archive(f'director_met_repo/{temp_dir}-zip', 'zip',
+                            f'director_met_repo/{temp_dir}')
 
         # send the file
-        flask.send_from_directory('temp_met_dir', f'{temp_dir}-zip.zip')
+        flask.send_from_directory('director_met_repo', f'{temp_dir}-zip.zip')
 
     except Exception as e:
         return json.dumps({"error": {"type": str(e)}})
@@ -125,8 +127,8 @@ def setup_server(root_metadata_file: str, timestamp_cfg: str, snapshot_cfg: str,
 
     # make python open up a specific directory in the filesystem
     # the temporary repo will be used to generate metadata files
-    if not os.path.exists('./temp_met_dir'):
-        os.mkdir('./temp_met_dir')
+    if not os.path.exists('director_met_repo'):
+        os.mkdir('director_met_repo')
 
     # setting up the various roles
     TARGETS = uptane.roles.targets.TargetsOnline(targets_cfg)
