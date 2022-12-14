@@ -230,7 +230,7 @@ def main():
     parser.add_argument(
         "command",
         help=
-        "metadata - command for generating metadata, server - command for generating a server, verify - command for verifying metadata, send - command for sending to server"
+        "metadata - command for generating metadata, server - command for generating a server, verify - command for verifying metadata, send - command for sending to server, pverify - for partial verification in the ecu"
     )
 
     # send arguments
