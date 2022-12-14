@@ -1,8 +1,6 @@
 .venv
 **/__pycache__
 test_metadata*
-temp.zip
-test_targets_dir
 *public*
 image_repo
 director_met_repo
