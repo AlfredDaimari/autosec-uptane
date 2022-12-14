@@ -125,7 +125,7 @@ def repo(reponame: str, filename: str):
                 hashf=uptane.crypto.hash.HashFunc.sha256, ktype=uptane.crypto.sign.KeyType.ed25519, \
                 pub_key=AUTH_PUB_ED25519_KEY, signature=auth_recv_dict["signature"]):
                 return "", 401
-
+            print("signature verified \u2713")
             file = flask.request.files["file"]
             # the file sent has to be a folder that has been zipped, not a files that have been zipped
 
@@ -134,13 +134,13 @@ def repo(reponame: str, filename: str):
             if not uptane.crypto.hash.get_file_hash('image_repo/{}/{}'.format(reponame, filename), \
                 hashf=uptane.crypto.hash.HashFunc.sha256, bufsize=auth_recv_dict["signed"]["bufsize"]):
                 return "", 401
-            
+            print("image hash compared \u2713") 
             # --- 
             # unzipping the file
             with zipfile.ZipFile('image_repo/{}/{}'.format(reponame,
                                                             filename)) as zipO:
                 zipO.extractall('image_repo/{}'.format(reponame))
-
+            print("zipped files unzipped\u2713") 
             # removing the zip file
             os.remove('image_repo/{}/{}'.format(reponame, filename))
 
@@ -153,7 +153,7 @@ def repo(reponame: str, filename: str):
             timestamp_file = get_timestamp_file_from_dirlist(recv_file_list)
             timestamp_file_path = '{}/{}'.format(verify_dir, timestamp_file)
             snapshot_file_path = '{}/{}'.format(verify_dir, snapshot_file)
-
+            
             # last authentication step (preventing rollback attack)
             if not __compare_latest_timestamp_to_verified(reponame, timestamp_file_path):
                 return "", 401
@@ -165,7 +165,8 @@ def repo(reponame: str, filename: str):
                        timestamp_metadata_file_path=timestamp_file_path, \
                        snapshot_metadata_file_path=snapshot_file_path, \
                        targets_files_dir_path=verify_dir)
-            
+            print("all metadata verfied \u2713")
+
             verifier.verify()
             # move files to downloadable repo
             remove_timestamp_file_from_repo(reponame)

@@ -18,6 +18,8 @@ class TargetsOnline(TarSnapAutoRole):
         self.signed_dict["_type"] = "targets"
 
     def targetsoneline_reinit(self, image_cfg: typing.Any):
+        self.signed_dict["spec_version"] = str(ONLINE_TARGETS_SPEC_VERSION)
+        self.signed_dict["_type"] = "targets"
         self.tarsnapauto_reinit(image_cfg)
 
 

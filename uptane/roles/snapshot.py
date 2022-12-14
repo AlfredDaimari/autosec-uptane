@@ -29,6 +29,11 @@ class SnapshotOnline(TarSnapAutoRole):
         create metadata files for the list of files
         '''
         self.tarsnapauto_reinit(None)
+        self.signed_dict["targets"] = {}
+        self.signed_dict["spec_version"] = ONLINE_SNAPSHOT_SPEC_VERSION
+        self.signed_dict["_type"] = "snapshot"
+        self.signed_dict["bufsize"] = self.bufsize
+
         self.targets = {}
         self.targets_metadata_files = targets_metadata_files
         for targets_metadata_file in targets_metadata_files:
@@ -45,8 +50,9 @@ class SnapshotOnline(TarSnapAutoRole):
         NOTE: Important - for now it verfies the targets image hash with only sha256 hash 
         using anyother func will ultimately make it fail
         '''
+        self.signed_dict["targets"] = {}
         for targets_metadata_file in self.targets_metadata_files:
-
+            
             self.signed_dict["targets"][targets_metadata_file] = {}
             self.signed_dict["targets"][targets_metadata_file]["hash"] = \
             uptane.crypto.hash.get_file_hash(targets_metadata_file, \

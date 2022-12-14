@@ -238,10 +238,16 @@ class Verification:
         '''
 
         self.__verify_root()
+        print("root metadata verified \u2713")
         self.__verify_all_targets_files()
+        print("all targets metadata verified \u2713")
         self.__verify_snapshot()
+        print("snapshot metadata verified \u2713")
         self.__verify_timestamp()
-
+        print("timestamp metadata verified \u2713")
+    
+    def verify_target_file(self) -> None:
+        self.__verify_all_targets_files()
 
 # RITUL
 class ECUVerification:

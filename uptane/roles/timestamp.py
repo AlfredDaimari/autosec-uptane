@@ -34,6 +34,10 @@ class TimestampOnline(AutoRole):
         self.signed_dict["vin"] = id
 
     def __generate_metadata(self):
+
+        self.signed_dict["bufsize"] = self.bufsize
+        self.signed_dict["_type"] = "timestamp"
+
         self.signed_dict["snapshot_metadata_file_hash"] = \
         uptane.crypto.hash.get_file_hash(self.snapshot_metadata_file, \
         uptane.crypto.hash.HashFunc.sha256, self.bufsize)
@@ -64,6 +68,7 @@ class TimestampOffline(ManualRole):
             self.snapshot_metadata_file_dict = tomli.load(f)
 
         self.signed_dict["bufsize"] = self.bufsize
+        self.signed_dict["_type"] = "timestamp"
         self.__generate_metadata()
 
     def __generate_metadata(self) -> None:
