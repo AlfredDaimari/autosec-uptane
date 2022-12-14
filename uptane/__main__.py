@@ -12,7 +12,18 @@ import uptane.crypto.sign
 import uptane.crypto.hash
 import subprocess
 import json
-import typing
+def exec_partial_verification(args)->None:
+    '''
+    Execute partial verification
+    '''
+    if args["rmetafile"] is None:
+        print("--rmetafile not given")
+
+    if args["tmetadir"] is None:
+        print("--tmetadir not given")
+
+    verify = uptane.verify.Verification(root_metadata_file_path=args["rmetafile"], timestamp_metadata_file_path=None, snapshot_metadata_file_path=None, targets_files_dir_path=args["tmetadir"])
+    verify.verify_target_file()
 
 def exec_send_to_image_repo(args)->None:
     '''
@@ -244,6 +255,8 @@ def main():
         exec_verify_metadata(args)
     elif args["command"] == "send":
         exec_send_to_image_repo(args)
+    elif args["command"] == "pverify":
+        exec_partial_verification(args)
     else:
         print(f'{args["command"]} not recognized')
 

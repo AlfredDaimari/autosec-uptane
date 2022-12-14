@@ -29,9 +29,7 @@ class Verification:
             Checks hash of Snapshot metadata file against hash in Timestamp metadata file 
     '''
 
-    def __init__(self, root_metadata_file_path: str,
-                 targets_files_dir_path: str, snapshot_metadata_file_path,
-                 timestamp_metadata_file_path: str) -> None:
+    def __init__(self, root_metadata_file_path: str, targets_files_dir_path: str, snapshot_metadata_file_path: str | None, timestamp_metadata_file_path: str | None) -> None:
         '''
         Inits the verification class with the root metadata file
             Parameters:
